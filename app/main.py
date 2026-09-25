@@ -12,7 +12,7 @@ from pathlib import Path
 import qrcode
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -52,6 +52,11 @@ def on_startup() -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/play")
 
 
 @app.get("/host", response_class=HTMLResponse)
