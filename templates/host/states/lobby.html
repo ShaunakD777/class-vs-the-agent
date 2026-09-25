@@ -1,0 +1,59 @@
+{# STATE 1 - LOBBY. Students are joining. Reads left to right: scan, who's
+   in, what we're playing about. The QR is the focal point; the count is the
+   second thing you see from the back of the room. #}
+<section class="lobby state" data-state="lobby" id="state-lobby">
+
+    <div class="lobby__qr">
+        <div class="qr-card">
+            <img id="qr-code" src="/qr.png" alt="QR code to join the game" width="640" height="640" />
+        </div>
+        <div class="join-url">
+            <svg class="icon" aria-hidden="true"><use href="#i-scan"></use></svg>
+            <span id="join-link">{{ join_url }}</span>
+        </div>
+    </div>
+
+    <div class="lobby__body">
+        <p class="flow">
+            <b>Join</b>
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Gather
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Choose topic
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Start
+        </p>
+
+        <h1 class="state__title">Scan in. The agent is warming up.</h1>
+
+        <div class="count-row">
+            <span class="count-row__num" id="lobby-count">{{ players|length }}</span>
+            <span class="count-row__label">students in the room</span>
+        </div>
+
+        <ul class="participants" id="player-list">
+            {% for player in players %}
+            <li class="participant" data-player-id="{{ player.id }}">
+                <span class="participant__name">{{ player.nickname }}</span>
+                <button class="participant__remove remove-player-btn" type="button"
+                        aria-label="Remove {{ player.nickname }}">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="topic-control">
+            <div class="field">
+                <label class="field__label" for="topic-input">Topic</label>
+                <input class="input" id="topic-input" type="text" autocomplete="off"
+                       placeholder="What did the class shout out?" />
+            </div>
+            <button class="btn btn--primary" id="research-btn" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                Start research
+            </button>
+        </div>
+    </div>
+
+</section>

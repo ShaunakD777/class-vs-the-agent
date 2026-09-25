@@ -1,0 +1,28 @@
+{# STATE 3 - QUESTION. The question dominates; everything else is there to
+   get the room answering. Options are a 2x2 grid with a fixed colour AND
+   shape per slot, matching the phone exactly. #}
+<section class="question state" data-state="question" id="state-question">
+
+    <div class="question__body">
+        <p class="question__text" id="q-text"></p>
+        <div class="options" id="q-options"></div>
+    </div>
+
+    <div class="timer" id="timer">
+        <div class="timer__ring">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="timer__track" cx="50" cy="50" r="43" fill="none" stroke-width="7" />
+                <circle class="timer__progress" id="timer-progress" cx="50" cy="50" r="43"
+                        fill="none" stroke-width="7" stroke-dasharray="270.2 270.2" stroke-dashoffset="0" />
+            </svg>
+            <div class="timer__num" id="timer-num" role="timer" aria-live="off">20</div>
+        </div>
+        <div class="answered">
+            <div class="answered__num">
+                <span id="answered-count">0</span> / <span id="answered-total">0</span>
+            </div>
+            <div class="answered__label">answered</div>
+        </div>
+    </div>
+
+</section>

@@ -1,0 +1,47 @@
+{# STATE 7 - APPROVAL. Human in the loop, made visible: the draft exists,
+   the agent is blocked, and only the presenter's click lets it through.
+   Approve is the dominant action; Skip stays secondary. #}
+<section class="approval state" data-state="approval" id="state-approval">
+
+    <p class="hitl">
+        <b>Agent</b>
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        <b>Draft</b>
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        <span class="is-gate">
+            <svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg>
+            Human approval
+        </span>
+    </p>
+
+    <h1 class="state__title">The agent needs your sign-off.</h1>
+
+    <div class="draft">
+        <div class="draft__head">
+            <span class="badge">
+                <svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg>
+                AI generated draft
+            </span>
+            <span class="badge badge--live">
+                <span class="dot"></span>
+                Waiting for presenter approval
+            </span>
+        </div>
+        <p class="draft__text" id="approval-draft"></p>
+    </div>
+
+    <div class="approval__gate">
+        <button class="btn btn--primary" id="approve-btn" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-approve"></use></svg>
+            Approve and announce
+        </button>
+        <button class="btn btn--ghost" id="skip-btn" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+            Skip
+        </button>
+        <p class="approval__note">
+            Nothing is read out to the class until this is approved.
+        </p>
+    </div>
+
+</section>

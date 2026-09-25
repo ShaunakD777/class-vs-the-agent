@@ -1,0 +1,31 @@
+{# Presenter controls. Visually subordinate by design: a dim dock in the
+   bottom-right that comes forward on hover or keyboard focus, so the
+   presenter can always find it without it competing with the projected
+   content. Every button has a keyboard shortcut as well (see host.js). #}
+<div class="presenter-dock" id="presenter-dock">
+    <button class="ctrl ctrl--primary" id="start-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg>
+        Start <kbd class="ctrl__key">S</kbd>
+    </button>
+    <button class="ctrl ctrl--primary hidden" id="next-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+        Next <kbd class="ctrl__key">N</kbd>
+    </button>
+    <button class="ctrl hidden" id="pause-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-pause"></use></svg>
+        Pause <kbd class="ctrl__key">P</kbd>
+    </button>
+    <button class="ctrl hidden" id="resume-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg>
+        Resume <kbd class="ctrl__key">P</kbd>
+    </button>
+    <button class="ctrl hidden" id="skip-question-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-forward"></use></svg>
+        Skip <kbd class="ctrl__key">K</kbd>
+    </button>
+    <span class="ctrl__sep"></span>
+    <button class="ctrl" id="safe-mode-btn" type="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg>
+        Safe mode
+    </button>
+</div>

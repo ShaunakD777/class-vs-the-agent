@@ -1,0 +1,24 @@
+{# The orientation header. Stable across all eight states: state changes
+   happen in the main area, not up here. Never a navigation bar. #}
+<header class="host-header">
+    <div class="wordmark">Class vs. <b>The Agent</b></div>
+    <div class="host-header__meta">
+        <span class="pill badge--warn hidden" id="safe-mode-pill">
+            <svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg>
+            Safe mode
+        </span>
+        <span class="pill pill--accent hidden" id="topic-pill">
+            <svg class="icon" aria-hidden="true"><use href="#i-target"></use></svg>
+            <span id="topic-pill-text"></span>
+        </span>
+        <span class="pill pill--mono hidden" id="question-pill">
+            <span class="pill__dim">Q</span>
+            <span class="pill__num" id="question-pill-slot">1</span>
+            <span class="pill__dim">/ <span id="question-pill-total">5</span></span>
+        </span>
+        <span class="pill pill--mono" id="count-pill">
+            <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
+            <span class="pill__num" id="player-count">{{ players|length }}</span>
+        </span>
+    </div>
+</header>

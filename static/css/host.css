@@ -1,0 +1,1404 @@
+/* The host presentation surface. One laptop browser, mirrored to a smart
+   board, so this file is written for a 16:9 canvas that must never scroll:
+   the frame is a flex column pinned to the viewport and only the activity
+   feed and the participant cloud scroll internally. */
+
+html, body { height: 100%; }
+
+body.host {
+    background: var(--navy-deep);
+    overflow: hidden;
+}
+
+/* ---------- frame ----------------------------------------------------- */
+.host-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+    background:
+        radial-gradient(90% 70% at 8% -10%, var(--orange-glow), transparent 60%),
+        radial-gradient(80% 70% at 100% 100%, var(--blue-glow), transparent 62%),
+        var(--navy);
+}
+
+/* ---------- header (stable across all eight states) ------------------- */
+.host-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s5);
+    height: clamp(72px, 8.5vh, 104px);
+    padding: 0 clamp(32px, 3.4vw, 72px);
+    background: rgba(27, 32, 56, 0.72);
+    border-bottom: 1px solid var(--line);
+}
+
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(20px, 1.5vw, 32px);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+.wordmark b { color: var(--orange); font-weight: 700; }
+
+.host-header__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    min-width: 0;
+}
+
+/* ---------- stage: 70-75% game content / 25-30% agent activity -------- */
+.host-stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 72fr) minmax(300px, 28fr);
+}
+
+/* Researching is the one state where the agent's own work IS the content,
+   so the activity panel takes the larger share. */
+.host-frame[data-stage="researching"] .host-stage {
+    grid-template-columns: minmax(0, 45fr) minmax(360px, 55fr);
+}
+
+/* Question and reveal give the game the width it needs; the panel narrows
+   and quietens rather than disappearing. */
+.host-frame[data-stage="question"] .host-stage,
+.host-frame[data-stage="reveal"] .host-stage {
+    grid-template-columns: minmax(0, 76fr) minmax(280px, 24fr);
+}
+
+.stage-main {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(24px, 4vh, 52px) clamp(32px, 3.4vw, 72px);
+    overflow: hidden;
+}
+
+/* ---------- state switching ------------------------------------------ */
+.state { display: none; min-width: 0; }
+.state.is-active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s5);
+    min-height: 0;
+    animation: state-in var(--t-slow) both;
+}
+
+@keyframes state-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+.state__eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-50);
+}
+
+.state__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h1);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.state__lead {
+    font-size: var(--fs-lead);
+    line-height: 1.4;
+    color: var(--text-70);
+    max-width: 52ch;
+}
+
+/* ---------- agent activity panel -------------------------------------- */
+.activity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: linear-gradient(180deg, rgba(15, 19, 34, 0.9), rgba(15, 19, 34, 0.98));
+    border-left: 1px solid var(--line);
+    /* Real layout space for the presenter dock, which floats over this
+       corner - reserved on the panel so an overflowing feed can't run
+       underneath it. */
+    padding-bottom: clamp(76px, 9vh, 104px);
+    transition: opacity var(--t-slow);
+}
+
+/* During live answering the room should be looking at the question. */
+.host-frame[data-stage="question"] .activity { opacity: 0.55; }
+
+.activity__head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: clamp(18px, 2.4vh, 28px) clamp(20px, 1.8vw, 32px) var(--s4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-50);
+}
+
+.activity__head .icon { color: var(--orange); }
+
+.activity__feed {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--s3);
+    padding: 0 clamp(20px, 1.8vw, 32px) var(--s2);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+}
+
+/* With nothing in it yet, the standing-by line reads better centred than
+   pinned to the bottom edge. */
+.activity__feed:not(:has(.event)) { justify-content: center; }
+
+.activity__feed::-webkit-scrollbar { width: 6px; }
+.activity__feed::-webkit-scrollbar-thumb { background: var(--line); border-radius: var(--r-pill); }
+.activity__feed::-webkit-scrollbar-track { background: transparent; }
+
+/* One event = a small block: a semantic label on top, plain-language detail
+   underneath. The newest carries the emphasis, older ones recede. */
+.event {
+    flex: none;
+    display: grid;
+    grid-template-columns: 1.6em 1fr;
+    gap: 0.2em var(--s3);
+    padding: var(--s3) var(--s4);
+    border-radius: var(--r-control);
+    border: 1px solid transparent;
+    color: var(--text-50);
+    opacity: 0.6;
+    transition: opacity var(--t-slow), color var(--t-slow),
+                background var(--t-slow), border-color var(--t-slow);
+    animation: event-in var(--t-mid) both;
+}
+
+@keyframes event-in {
+    from { opacity: 0; transform: translateY(6px); }
+}
+
+.event__icon {
+    grid-row: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5em;
+    font-size: var(--fs-activity);
+    color: var(--text-50);
+    transition: color var(--t-slow);
+}
+
+.event__kind {
+    font-family: var(--font-mono);
+    font-size: calc(var(--fs-activity) * 0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+.event__text {
+    font-size: var(--fs-activity);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+/* The newest event. */
+.event.is-latest {
+    opacity: 1;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--line);
+}
+.event.is-latest .event__kind { color: var(--text-50); }
+
+.event--search.is-latest .event__icon { color: var(--blue); }
+.event--sources.is-latest .event__icon { color: var(--green); }
+.event--analyze.is-latest .event__icon { color: var(--orange); }
+.event--question.is-latest .event__icon { color: var(--orange); }
+.event--waiting.is-latest .event__icon { color: var(--text-50); }
+
+/* Idle / standing-by placeholder, shown before anything has happened. */
+.activity__idle {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    padding: var(--s3) var(--s4);
+    font-size: var(--fs-activity);
+    color: var(--text-50);
+}
+
+.pulse-ring {
+    position: relative;
+    width: 0.8em;
+    height: 0.8em;
+    flex: none;
+    border-radius: 50%;
+    background: var(--orange);
+}
+.pulse-ring::after {
+    content: "";
+    position: absolute;
+    inset: -0.45em;
+    border-radius: 50%;
+    border: 1px solid var(--orange);
+    animation: ring-out 2.4s ease-out infinite;
+}
+
+@keyframes ring-out {
+    0% { transform: scale(0.5); opacity: 0.9; }
+    100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* ---------- presenter controls ----------------------------------------
+   Always findable, never the thing students look at: a low-contrast dock in
+   the bottom-right that comes fully forward on hover or keyboard focus. */
+.presenter-dock {
+    position: absolute;
+    right: clamp(20px, 1.8vw, 32px);
+    bottom: clamp(16px, 2vh, 26px);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    padding: var(--s2);
+    border-radius: var(--r-control);
+    background: rgba(15, 19, 34, 0.82);
+    border: 1px solid var(--line-soft);
+    opacity: 0.42;
+    transition: opacity var(--t-mid), border-color var(--t-mid);
+}
+
+.presenter-dock:hover,
+.presenter-dock:focus-within {
+    opacity: 1;
+    border-color: var(--line);
+    box-shadow: var(--shadow-lift);
+}
+
+.ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: clamp(13px, 0.85vw, 17px);
+    letter-spacing: 0.04em;
+    color: var(--text-70);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.6em 0.8em;
+    min-height: 44px;
+    white-space: nowrap;
+    transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.ctrl:hover { background: var(--surface-2); color: var(--text); }
+
+.ctrl__key {
+    font-size: 0.85em;
+    color: var(--text-35);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 0.35em;
+}
+
+.ctrl--primary {
+    background: var(--orange);
+    color: #14182B;
+    border-color: var(--orange);
+}
+.ctrl--primary:hover { background: #FF8C5D; color: #14182B; }
+.ctrl--primary .ctrl__key { color: rgba(20, 24, 43, 0.65); border-color: rgba(20, 24, 43, 0.3); }
+
+.ctrl__sep {
+    width: 1px;
+    height: 24px;
+    background: var(--line);
+    flex: none;
+}
+
+/* =====================================================================
+   STATE 1 - LOBBY
+   ===================================================================== */
+.lobby.is-active {
+    display: grid;
+    grid-template-columns: minmax(230px, 34%) minmax(0, 1fr);
+    gap: clamp(28px, 3vw, 56px);
+    align-items: center;
+    animation: state-in var(--t-slow) both;
+}
+
+.lobby__qr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+    min-width: 0;
+}
+
+.qr-card {
+    background: var(--text);
+    border-radius: var(--r-hero);
+    padding: clamp(10px, 1vw, 20px);
+    box-shadow: 0 0 0 1px var(--line), 0 0 70px var(--orange-glow);
+}
+
+.qr-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+}
+
+.join-url {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: clamp(15px, 1.1vw, 23px);
+    color: var(--orange);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.lobby__body {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.2vh, 28px);
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.flow {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-35);
+    flex-wrap: wrap;
+}
+.flow b { color: var(--orange); font-weight: 500; }
+.flow span, .hitl span, .hitl b {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.flow .icon { width: 0.85em; height: 0.85em; }
+.flow .is-last { color: var(--orange); }
+
+.count-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s4);
+    flex-wrap: wrap;
+}
+
+.count-row__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-count);
+    line-height: 1;
+    color: var(--orange);
+    letter-spacing: -0.03em;
+}
+
+.count-row__label {
+    font-size: var(--fs-lead);
+    color: var(--text-70);
+}
+
+/* Participant cloud: names as small plates, scrolling inside their own box
+   so the lobby never grows the page. */
+.participants {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: var(--s2);
+    padding: var(--s4);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    background: rgba(27, 32, 56, 0.45);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+}
+
+.participants:empty::after {
+    content: "Waiting for the first student to scan in\2026";
+    font-size: var(--fs-body);
+    color: var(--text-35);
+}
+
+.participant {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: var(--font-mono);
+    font-size: clamp(14px, 1.05vw, 22px);
+    padding: 0.35em 0.7em;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-70);
+    max-width: 24ch;
+    animation: participant-in var(--t-mid) both;
+}
+
+.participant__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes participant-in {
+    from { opacity: 0; transform: translateY(6px) scale(0.96); }
+}
+
+.participant__remove {
+    display: grid;
+    place-items: center;
+    width: 1.4em;
+    height: 1.4em;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-35);
+    opacity: 0;
+    transition: opacity var(--t-fast), color var(--t-fast);
+}
+
+.participant:hover .participant__remove,
+.participant__remove:focus-visible { opacity: 1; }
+.participant__remove:hover { color: var(--pink); }
+
+.topic-control {
+    display: flex;
+    gap: var(--s3);
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.field {
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+}
+
+.field__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-50);
+}
+
+.input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    padding: 0.55em 0.75em;
+    border-radius: var(--r-control);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color var(--t-fast);
+}
+.input::placeholder { color: var(--text-35); }
+.input:focus { outline: none; border-color: var(--blue); }
+
+.topic-control .btn { font-size: var(--fs-body); min-height: 56px; }
+
+/* =====================================================================
+   STATE 2 - RESEARCHING
+   ===================================================================== */
+.research.is-active { gap: clamp(18px, 2.8vh, 40px); }
+
+.research__head {
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 2.4vw, 44px);
+    justify-content: space-between;
+}
+
+/* SEARCH -> ANALYZE -> BUILD, as a visible three-step process. */
+.phases {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+}
+
+.phase {
+    display: grid;
+    grid-template-columns: 2.4em minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s4);
+    padding: var(--s4) var(--s5);
+    border-radius: var(--r-card);
+    border: 1px solid var(--line-soft);
+    color: var(--text-35);
+    transition: color var(--t-slow), border-color var(--t-slow), background var(--t-slow);
+}
+
+.phase__mark {
+    display: grid;
+    place-items: center;
+    width: 2.4em;
+    height: 2.4em;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    font-size: calc(var(--fs-body) * 0.85);
+}
+
+.phase__name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-h2);
+    letter-spacing: -0.01em;
+    color: var(--text-35);
+    transition: color var(--t-slow);
+}
+
+.phase__note {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: right;
+}
+
+.phase.is-done { color: var(--green); border-color: rgba(45, 203, 145, 0.3); }
+.phase.is-done .phase__mark { background: var(--green-wash); }
+.phase.is-active {
+    color: var(--orange);
+    border-color: rgba(255, 122, 69, 0.45);
+    background: var(--orange-wash);
+}
+.phase.is-active .phase__mark { animation: mark-pulse 1.8s ease-in-out infinite; }
+.phase.is-done .phase__name, .phase.is-active .phase__name { color: var(--text); }
+
+@keyframes mark-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--orange-glow); }
+    50% { box-shadow: 0 0 0 10px transparent; }
+}
+
+/* Restrained "the model is working" visual: concentric scanning rings over
+   a soft core. No robots, no stock AI imagery. */
+.scanner {
+    position: relative;
+    flex: none;
+    width: clamp(110px, 12vh, 200px);
+    height: clamp(110px, 12vh, 200px);
+}
+
+.scanner__core {
+    position: absolute;
+    inset: 32%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #FFB08C, var(--orange) 55%, rgba(255, 122, 69, 0.2) 100%);
+    box-shadow: 0 0 44px var(--orange-glow);
+    animation: core-breathe 2.6s ease-in-out infinite;
+}
+
+.scanner__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 122, 69, 0.4);
+    animation: scan-out 3s ease-out infinite;
+}
+.scanner__ring:nth-child(2) { animation-delay: 1s; border-color: rgba(76, 125, 255, 0.45); }
+.scanner__ring:nth-child(3) { animation-delay: 2s; }
+
+@keyframes scan-out {
+    0% { transform: scale(0.42); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes core-breathe {
+    0%, 100% { transform: scale(0.94); }
+    50% { transform: scale(1.06); }
+}
+
+.research__foot {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(24px, 2.6vw, 56px);
+    flex-wrap: wrap;
+}
+
+.metric { display: flex; align-items: baseline; gap: 10px; }
+.metric b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h2);
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+.metric span {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-50);
+}
+
+/* =====================================================================
+   READY - the bridge state between researching and question 1
+   ===================================================================== */
+.ready.is-active { align-items: flex-start; }
+
+.ready__check {
+    display: grid;
+    place-items: center;
+    width: clamp(56px, 5vw, 92px);
+    height: clamp(56px, 5vw, 92px);
+    border-radius: 50%;
+    background: var(--green-wash);
+    border: 1px solid rgba(45, 203, 145, 0.4);
+    color: var(--green);
+    font-size: clamp(26px, 2.2vw, 46px);
+}
+
+.ready__slots { display: flex; gap: var(--s3); flex-wrap: wrap; }
+
+.slot-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    padding: 0.55em 0.9em;
+    border-radius: var(--r-control);
+    border: 1px solid var(--line);
+    color: var(--text-70);
+    background: var(--surface);
+}
+.slot-chip .icon { color: var(--green); }
+.slot-chip--pending { color: var(--text-35); border-style: dashed; }
+.slot-chip--pending .icon { color: var(--text-35); }
+
+/* =====================================================================
+   STATE 3 - QUESTION
+   ===================================================================== */
+.question.is-active {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(150px, 13vw, 250px);
+    gap: clamp(24px, 2.6vw, 52px);
+    align-items: center;
+}
+
+.question__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vh, 44px);
+}
+
+.question__text {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-question);
+    line-height: 1.14;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(12px, 1.2vw, 22px);
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    min-height: clamp(62px, 10.5vh, 120px);
+    padding: 0.55em 0.85em;
+    border-radius: var(--r-card);
+    background: var(--ans);
+    color: var(--ans-ink);
+    font-size: var(--fs-answer);
+    font-weight: 700;
+    line-height: 1.2;
+    animation: option-in var(--t-slow) both;
+    transition: opacity var(--t-slow), filter var(--t-slow), box-shadow var(--t-slow);
+}
+
+.option:nth-child(2) { animation-delay: 60ms; }
+.option:nth-child(3) { animation-delay: 120ms; }
+.option:nth-child(4) { animation-delay: 180ms; }
+
+@keyframes option-in {
+    from { opacity: 0; transform: translateY(12px); }
+}
+
+.option .shape { color: var(--ans-ink); opacity: 0.85; }
+.option__text { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- timer ----------------------------------------------------- */
+.timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s5);
+}
+
+.timer__ring {
+    position: relative;
+    width: clamp(126px, 12vw, 226px);
+    height: clamp(126px, 12vw, 226px);
+}
+
+.timer__ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+.timer__track { stroke: rgba(247, 245, 240, 0.1); }
+.timer__progress {
+    stroke: var(--orange);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 260ms linear, stroke var(--t-mid);
+}
+
+.timer.is-urgent .timer__progress { stroke: var(--pink); }
+.timer.is-urgent .timer__num { color: var(--pink); }
+
+.timer__num {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-count);
+    color: var(--orange);
+    letter-spacing: -0.03em;
+}
+
+.timer.is-paused .timer__num { color: var(--text-50); }
+.timer.is-paused .timer__progress { stroke: var(--text-35); }
+
+.answered {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+}
+
+.answered__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h2);
+    letter-spacing: -0.01em;
+}
+
+.answered__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-50);
+}
+
+/* =====================================================================
+   STATE 4 - REVEAL
+   ===================================================================== */
+.reveal.is-active { gap: clamp(16px, 2.6vh, 34px); }
+
+.reveal__answer {
+    display: flex;
+    align-items: center;
+    gap: var(--s5);
+    padding: clamp(14px, 2.2vh, 30px) clamp(18px, 2vw, 36px);
+    border-radius: var(--r-hero);
+    background: linear-gradient(100deg, var(--green-wash), rgba(45, 203, 145, 0.02));
+    border: 1px solid rgba(45, 203, 145, 0.45);
+    animation: answer-in 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes answer-in {
+    from { opacity: 0; transform: scale(0.97); }
+}
+
+.reveal__mark {
+    display: grid;
+    place-items: center;
+    width: clamp(50px, 4.4vw, 84px);
+    height: clamp(50px, 4.4vw, 84px);
+    flex: none;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--navy);
+    font-size: clamp(26px, 2.2vw, 46px);
+}
+
+.reveal__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--green);
+}
+
+.reveal__text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 2.5vw, 54px);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.reveal__split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(20px, 2.4vw, 48px);
+    align-items: start;
+    min-height: 0;
+}
+
+.reveal__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+    min-width: 0;
+}
+
+.reveal__scored {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    font-size: var(--fs-body);
+    color: var(--text-50);
+}
+.reveal__scored b {
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    color: var(--green);
+    letter-spacing: -0.02em;
+}
+
+/* The agent talking about the room, not a data panel. */
+.commentary {
+    display: flex;
+    gap: var(--s4);
+    padding: clamp(13px, 1.8vh, 24px) clamp(15px, 1.4vw, 26px);
+    border-radius: var(--r-card);
+    background: var(--blue-wash);
+    border: 1px solid rgba(76, 125, 255, 0.4);
+    font-size: var(--fs-body);
+    line-height: 1.45;
+}
+
+.commentary .icon { color: var(--blue); font-size: 1.25em; margin-top: 0.1em; }
+.commentary__text { min-width: 0; }
+.commentary__text mark {
+    background: transparent;
+    color: var(--orange);
+    font-family: var(--font-mono);
+    font-weight: 500;
+}
+
+.commentary.is-pending { border-style: dashed; color: var(--text-35); }
+.commentary.is-pending .icon { color: var(--text-35); }
+
+.explanation {
+    font-size: var(--fs-body);
+    line-height: 1.45;
+    color: var(--text-70);
+}
+
+.source {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--text-35);
+    min-width: 0;
+}
+.source span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
+   STATE 5 - LEADERBOARD
+   ===================================================================== */
+.leaderboard.is-active { gap: clamp(14px, 2.4vh, 30px); }
+
+.lb {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    min-height: 0;
+}
+
+.lb__row {
+    display: grid;
+    grid-template-columns: 2.2em minmax(0, 1fr) auto 3.6em;
+    align-items: center;
+    gap: clamp(14px, 1.6vw, 30px);
+    padding: clamp(9px, 1.4vh, 18px) clamp(16px, 1.4vw, 26px);
+    border-radius: var(--r-card);
+    border: 1px solid var(--line-soft);
+    background: rgba(27, 32, 56, 0.5);
+    font-size: var(--fs-body);
+    animation: row-in var(--t-slow) both;
+}
+
+.lb__row:nth-child(2) { animation-delay: 70ms; }
+.lb__row:nth-child(3) { animation-delay: 140ms; }
+.lb__row:nth-child(4) { animation-delay: 210ms; }
+.lb__row:nth-child(5) { animation-delay: 280ms; }
+
+@keyframes row-in {
+    from { opacity: 0; transform: translateX(-14px); }
+}
+
+.lb__rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h2);
+    color: var(--text-35);
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+.lb__name {
+    font-family: var(--font-mono);
+    font-size: calc(var(--fs-body) * 1.05);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lb__score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-score);
+    letter-spacing: -0.02em;
+    text-align: right;
+}
+
+.lb__move {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--text-35);
+}
+.lb__move--up { color: var(--green); }
+.lb__move--down { color: var(--pink); }
+
+/* The top three read as distinct without becoming trophies. */
+.lb__row--1 {
+    border-color: rgba(255, 122, 69, 0.5);
+    background: linear-gradient(100deg, var(--orange-wash), rgba(27, 32, 56, 0.5) 62%);
+}
+.lb__row--1 .lb__rank, .lb__row--1 .lb__score { color: var(--orange); }
+.lb__row--2, .lb__row--3 { border-color: var(--line); }
+.lb__row--2 .lb__rank, .lb__row--3 .lb__rank { color: var(--text-70); }
+
+/* Anyone who jumped three or more places gets called out. */
+.lb__row--jumped {
+    border-color: rgba(255, 122, 69, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 122, 69, 0.18);
+}
+
+/* =====================================================================
+   STATE 6 - DIFFICULTY CHECK (full-bleed decision moment)
+   ===================================================================== */
+.difficulty-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: none;
+    background:
+        radial-gradient(70% 60% at 50% 42%, rgba(255, 122, 69, 0.24), transparent 65%),
+        var(--navy);
+}
+
+.host-frame[data-stage="difficulty_check"] .difficulty-overlay { display: block; }
+.host-frame[data-stage="difficulty_check"] .host-header,
+.host-frame[data-stage="difficulty_check"] .host-stage { visibility: hidden; }
+
+.dif {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(210px, 22vw, 360px);
+    align-items: center;
+    gap: clamp(32px, 5vw, 90px);
+    padding: clamp(28px, 5vh, 68px) clamp(40px, 6vw, 120px);
+    animation: state-in var(--t-slow) both;
+}
+
+.dif__body { min-width: 0; }
+
+.dif__headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-mega);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--orange);
+    margin: var(--s5) 0;
+    text-wrap: balance;
+}
+
+.dif__evidence {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s4);
+    font-size: var(--fs-lead);
+    color: var(--text);
+    margin-bottom: var(--s4);
+    flex-wrap: wrap;
+}
+.dif__evidence b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h1);
+    color: var(--green);
+    letter-spacing: -0.02em;
+}
+
+.dif__reason {
+    font-size: var(--fs-lead);
+    line-height: 1.4;
+    color: var(--text-70);
+    max-width: 46ch;
+}
+
+/* The dial: an arc with three labelled stops and a needle that lands on the
+   level the agent chose. */
+.dial { display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+.dial svg { width: 100%; height: auto; }
+.dial__arc { stroke: rgba(247, 245, 240, 0.12); stroke-linecap: round; fill: none; stroke-width: 14; }
+.dial__fill {
+    stroke: var(--orange);
+    stroke-linecap: round;
+    fill: none;
+    stroke-width: 14;
+    transition: stroke-dashoffset 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dial__needle {
+    stroke: var(--text);
+    stroke-width: 5;
+    stroke-linecap: round;
+    transform-origin: 110px 108px;
+    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dial__hub { fill: var(--text); }
+
+.dial__level {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h1);
+    letter-spacing: -0.02em;
+    color: var(--orange);
+    text-transform: capitalize;
+}
+
+.dial__scale {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-35);
+}
+.dial__scale .is-on { color: var(--text); }
+
+/* =====================================================================
+   STATE 7 - APPROVAL (human in the loop)
+   ===================================================================== */
+.approval.is-active { gap: clamp(16px, 2.6vh, 32px); }
+
+.hitl {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-35);
+    flex-wrap: wrap;
+}
+.hitl b { color: var(--text-70); font-weight: 500; }
+.hitl .is-gate { color: var(--orange); }
+
+.draft {
+    border-radius: var(--r-hero);
+    border: 1px solid var(--line);
+    background: linear-gradient(170deg, var(--surface), rgba(27, 32, 56, 0.55));
+    padding: clamp(18px, 2.6vh, 34px) clamp(20px, 2.2vw, 42px);
+    max-width: 66ch;
+    box-shadow: var(--shadow-card);
+}
+
+.draft__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s4);
+    padding-bottom: var(--s4);
+    margin-bottom: var(--s4);
+    border-bottom: 1px solid var(--line-soft);
+    flex-wrap: wrap;
+}
+
+.draft__text {
+    font-size: clamp(22px, 1.8vw, 38px);
+    line-height: 1.4;
+    text-wrap: pretty;
+}
+
+.approval__gate {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    flex-wrap: wrap;
+}
+.approval__gate .btn { font-size: var(--fs-body); min-height: 62px; padding: 0.6em 1.5em; }
+.approval__note { font-size: var(--fs-meta); color: var(--text-35); max-width: 32ch; line-height: 1.4; }
+
+/* =====================================================================
+   STATE 8 - FINAL
+   ===================================================================== */
+.final.is-active {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 25vw, 400px);
+    grid-template-areas: "main side" "journey journey";
+    gap: clamp(18px, 2.6vw, 48px) clamp(28px, 3.4vw, 64px);
+    align-items: center;
+}
+
+.final__main { grid-area: main; }
+.final__side { grid-area: side; }
+
+/* RESEARCH -> GENERATE -> ADAPT -> PLAY -> REMEMBER: the whole arc of the
+   demo, named on the last screen so the lecture can pick it straight up. */
+.final__journey {
+    grid-area: journey;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6em;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-35);
+}
+.final__journey b { color: var(--text-70); font-weight: 500; }
+.final__journey .is-last { color: var(--orange); }
+.final__journey .icon { width: 0.85em; height: 0.85em; }
+
+.final__main {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 2.6vh, 34px);
+    min-width: 0;
+}
+
+.podium {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: clamp(10px, 1.2vw, 22px);
+    height: clamp(150px, 25vh, 310px);
+}
+
+.podium__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--s2);
+    min-width: 0;
+    height: 100%;
+}
+
+/* The bars size against this slot rather than the whole column, so the name
+   and the score always keep their space. */
+.podium__slot {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.podium__name {
+    font-family: var(--font-mono);
+    font-size: clamp(14px, 1.1vw, 23px);
+    color: var(--text-70);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.podium__score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h2);
+    letter-spacing: -0.02em;
+}
+
+.podium__bar {
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    display: grid;
+    place-items: start center;
+    padding-top: var(--s4);
+    font-size: clamp(20px, 1.7vw, 36px);
+    animation: bar-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: bottom;
+}
+
+@keyframes bar-rise { from { transform: scaleY(0.02); } }
+
+.podium__col--1 .podium__bar { height: 100%; background: var(--orange); color: var(--navy); }
+.podium__col--1 .podium__name { color: var(--text); }
+.podium__col--1 .podium__score { color: var(--orange); }
+.podium__col--2 .podium__bar { height: 64%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-70); animation-delay: 120ms; }
+.podium__col--3 .podium__bar { height: 44%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-70); animation-delay: 240ms; }
+
+.final__side { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+    padding: clamp(13px, 1.8vh, 24px) clamp(15px, 1.4vw, 26px);
+    border-radius: var(--r-card);
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.stat__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-h1);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--green);
+}
+.stat--accent .stat__num { color: var(--orange); }
+
+.stat__label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-50);
+}
+
+.final__sent {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    padding: clamp(13px, 1.8vh, 24px) clamp(15px, 1.4vw, 26px);
+    border-radius: var(--r-card);
+    border: 1px solid rgba(45, 203, 145, 0.35);
+    background: var(--green-wash);
+    font-size: var(--fs-body);
+    line-height: 1.3;
+    color: var(--green);
+}
+.final__sent .icon { font-size: 1.5em; }
+
+.final__announcement {
+    font-size: var(--fs-body);
+    line-height: 1.45;
+    color: var(--text-70);
+    font-style: italic;
+}
+
+/* Restrained celebration: small geometric pieces, once, then gone. */
+.confetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.confetti__piece {
+    position: absolute;
+    top: -24px;
+    width: 8px;
+    height: 14px;
+    opacity: 0.85;
+    animation: confetti-fall 3.4s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+}
+
+@keyframes confetti-fall {
+    to { transform: translateY(110vh) rotate(420deg); opacity: 0; }
+}
+
+/* =====================================================================
+   Narrower windows. The host page is a laptop surface, but it must not
+   break if the presenter drags the window small or opens it on a tablet.
+   ===================================================================== */
+@media (max-width: 1199px) {
+    .host-stage,
+    .host-frame[data-stage="researching"] .host-stage,
+    .host-frame[data-stage="question"] .host-stage,
+    .host-frame[data-stage="reveal"] .host-stage {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 32%);
+    }
+    .activity { border-left: 0; border-top: 1px solid var(--line); }
+    .final.is-active { grid-template-areas: "main" "side" "journey"; }
+    .question.is-active,
+    .final.is-active,
+    .lobby.is-active,
+    .dif,
+    .reveal__split { grid-template-columns: minmax(0, 1fr); }
+    .timer { flex-direction: row; justify-content: center; gap: var(--s6); }
+    .dial { display: none; }
+}
+
+@media (max-width: 899px) {
+    body.host { overflow: auto; }
+    .host-frame { height: auto; min-height: 100dvh; }
+    .options { grid-template-columns: minmax(0, 1fr); }
+    .host-header { height: auto; padding: var(--s4) var(--s5); flex-wrap: wrap; }
+    .stage-main { padding: var(--s5); }
+}

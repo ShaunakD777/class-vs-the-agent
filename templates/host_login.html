@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Class vs. The Agent &mdash; Presenter</title>
+    {% include "partials/favicon.html" %}
+    {% include "partials/fonts.html" %}
+    <link rel="stylesheet" href="/static/css/tokens.css" />
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/player.css" />
+</head>
+<body class="player">
+    {% include "partials/icons.html" %}
+
+    <div class="player-app">
+        <header class="player-header">
+            <span class="player-header__brand">Class vs. <b>The Agent</b></span>
+            <span class="tag">
+                <svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg>
+                Presenter
+            </span>
+        </header>
+
+        <main class="player-main">
+            <section class="screen join is-active">
+                <h1 class="screen__title">Presenter sign-in</h1>
+                <p class="screen__lead">This screen is the one the class will see.</p>
+
+                <form class="join__field" method="get" action="/host">
+                    <label class="field__label sr-only" for="pin">Presenter PIN</label>
+                    <input class="player-input" id="pin" name="pin" type="password"
+                           inputmode="numeric" placeholder="Presenter PIN" autofocus />
+                    <button class="player-btn" type="submit" style="margin-top: var(--s3)">
+                        <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                        Open host screen
+                    </button>
+                </form>
+
+                {% if wrong %}
+                <p class="player-msg is-shown">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x-circle"></use></svg>
+                    That PIN didn&rsquo;t match. Try again.
+                </p>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

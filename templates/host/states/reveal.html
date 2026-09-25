@@ -1,0 +1,38 @@
+{# STATE 4 - REVEAL. The correct answer takes the top of the screen as a
+   single dominant statement; the split underneath carries how the room
+   answered on one side and the agent's read of the round on the other. #}
+<section class="reveal state" data-state="reveal" id="state-reveal">
+
+    <div class="reveal__answer">
+        <span class="reveal__mark">
+            <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+        </span>
+        <div>
+            <p class="reveal__label">Correct answer</p>
+            <p class="reveal__text" id="reveal-correct"></p>
+        </div>
+    </div>
+
+    <div class="reveal__split">
+        <div>
+            <p class="state__eyebrow" style="margin-bottom: var(--s3)">How the room answered</p>
+            <div class="dist" id="reveal-dist"></div>
+            <p class="reveal__scored" style="margin-top: var(--s4)">
+                <b id="reveal-pct">0%</b> got it right
+            </p>
+        </div>
+
+        <div class="reveal__aside">
+            <div class="commentary is-pending" id="reveal-commentary-box">
+                <svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg>
+                <span class="commentary__text" id="reveal-commentary">Reading the room&hellip;</span>
+            </div>
+            <p class="explanation" id="reveal-explanation"></p>
+            <p class="source">
+                <svg class="icon" aria-hidden="true"><use href="#i-link"></use></svg>
+                <span id="reveal-source"></span>
+            </p>
+        </div>
+    </div>
+
+</section>

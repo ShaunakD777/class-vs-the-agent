@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+{#
+  Host presentation shell. Deliberately thin: it holds the stable header, the
+  activity panel, the presenter dock, and includes one file per game state.
+
+  All states ship in this one page on purpose - the host holds a single
+  long-lived WebSocket for the whole game, so navigating between server-
+  rendered pages per state would drop the connection. host.js shows exactly
+  one state at a time; the layout for each lives in its own template under
+  templates/host/states/.
+#}
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Class vs. The Agent &mdash; Host</title>
+    {% include "partials/favicon.html" %}
+    {% include "partials/fonts.html" %}
+    <link rel="stylesheet" href="/static/css/tokens.css" />
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/host.css" />
+</head>
+<body class="host">
+    {% include "partials/icons.html" %}
+
+    <div class="host-frame" id="host-frame" data-stage="lobby">
+
+        {% include "host/partials/header.html" %}
+
+        <div class="host-stage">
+            <main class="stage-main">
+                {% include "host/states/lobby.html" %}
+                {% include "host/states/researching.html" %}
+                {% include "host/states/ready.html" %}
+                {% include "host/states/question.html" %}
+                {% include "host/states/reveal.html" %}
+                {% include "host/states/leaderboard.html" %}
+                {% include "host/states/approval.html" %}
+                {% include "host/states/final.html" %}
+            </main>
+
+            {% include "host/partials/agent_activity.html" %}
+        </div>
+
+        {# Full-bleed, so it sits outside the stage grid it covers. #}
+        {% include "host/states/difficulty.html" %}
+
+        <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+        {% include "host/partials/presenter_controls.html" %}
+    </div>
+
+    <script>window.PRESENTER_PIN = {{ pin | tojson }};</script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/host.js"></script>
+</body>
+</html>

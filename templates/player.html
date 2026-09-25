@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+{#
+  The player surface. A separate, phone-first participation UI: join, see the
+  question, answer, wait, see the result, see your own standing, read the
+  revision notes. It deliberately does NOT show the host's agent activity
+  panel - students look up at the board for that.
+#}
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14182B" />
+    <title>Class vs. The Agent</title>
+    {% include "partials/favicon.html" %}
+    {% include "partials/fonts.html" %}
+    <link rel="stylesheet" href="/static/css/tokens.css" />
+    <link rel="stylesheet" href="/static/css/base.css" />
+    <link rel="stylesheet" href="/static/css/components.css" />
+    <link rel="stylesheet" href="/static/css/player.css" />
+</head>
+<body class="player">
+    {% include "partials/icons.html" %}
+
+    <div class="player-app">
+
+        <header class="player-header">
+            <span class="player-header__brand">Class vs. <b>The Agent</b></span>
+            <span class="player-header__right">
+                <span class="tag hidden" id="slot-tag">
+                    Q<span id="slot-num">1</span>/<span id="slot-total">5</span>
+                </span>
+                <span class="tag tag--accent hidden" id="me-tag">
+                    <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
+                    <span id="me-name"></span>
+                </span>
+            </span>
+        </header>
+
+        <main class="player-main">
+
+            <!-- JOIN -->
+            <section class="screen join is-active" id="screen-join">
+                <h1 class="screen__title">Pick a nickname.</h1>
+                <p class="screen__lead">It shows up on the big screen, so keep it classroom-safe.</p>
+
+                <div class="join__field">
+                    <input class="player-input" id="nickname" type="text" maxlength="16"
+                           autocomplete="off" autocapitalize="off" spellcheck="false"
+                           placeholder="2-16 characters" />
+                </div>
+
+                <button class="player-btn" id="join-btn" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                    Join the game
+                </button>
+
+                <p class="player-msg" id="message"></p>
+
+                <div class="screen__spacer"></div>
+
+                <p class="join__privacy">
+                    Only your nickname and your answers are stored, and everything is
+                    deleted after the session.
+                </p>
+            </section>
+
+            <!-- WAITING -->
+            <section class="screen waiting" id="screen-waiting">
+                <span class="waiting__mark">
+                    <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                </span>
+                <h1 class="screen__title" id="waiting-title">You&rsquo;re in.</h1>
+                <p class="screen__lead" id="waiting-text"></p>
+                <p class="waiting__look">
+                    <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                    Watch the big screen
+                </p>
+            </section>
+
+            <!-- QUESTION (also carries the locked state, so the chosen answer stays visible) -->
+            <section class="screen pq" id="screen-question">
+                <div class="pq__timer">
+                    <div class="pq__bar">
+                        <div class="pq__bar-fill" id="pq-bar"></div>
+                    </div>
+                    <span class="pq__secs" id="timer" role="timer">20</span>
+                </div>
+
+                <p class="pq__text" id="q-text"></p>
+
+                <div class="pq__options" id="q-options"></div>
+
+                <p class="pq__locked">
+                    <svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg>
+                    Locked in
+                </p>
+            </section>
+
+            <!-- RESULT -->
+            <section class="screen result" id="screen-result">
+                <div class="verdict" id="verdict">
+                    <span class="verdict__mark" id="verdict-mark">
+                        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+                    </span>
+                    <span class="verdict__word" id="verdict-word">Correct</span>
+                    <span class="verdict__points" id="verdict-points">+0</span>
+                    <span class="verdict__sub" id="verdict-sub">points this round</span>
+                </div>
+
+                <div class="standing">
+                    <div class="standing__cell standing__cell--rank">
+                        <span class="standing__num" id="result-rank">&mdash;</span>
+                        <span class="standing__label">your rank</span>
+                    </div>
+                    <div class="standing__cell">
+                        <span class="standing__num" id="result-score">0</span>
+                        <span class="standing__label">total score</span>
+                    </div>
+                </div>
+
+                <p class="result__hint">
+                    <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                    The answer and the class split are on the big screen.
+                </p>
+            </section>
+
+            <!-- FINAL -->
+            <section class="screen pfinal" id="screen-final">
+                <h1 class="screen__title">Game over.</h1>
+
+                <div class="pfinal__rank">
+                    <span class="pfinal__place" id="final-rank">&mdash;</span>
+                    <span class="pfinal__meta">
+                        <b id="final-score">0 points</b>
+                        <span>final standing</span>
+                    </span>
+                </div>
+
+                <p class="screen__lead" id="final-notes-lead">Worth a second look:</p>
+                <div class="notes" id="final-notes"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <p class="offline" id="offline">
+        <svg class="icon" aria-hidden="true"><use href="#i-x-circle"></use></svg>
+        Connection lost &mdash; refresh this page.
+    </p>
+
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/player.js"></script>
+</body>
+</html>

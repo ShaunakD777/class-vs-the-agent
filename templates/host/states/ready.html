@@ -1,0 +1,36 @@
+{# READY - the short bridge between research finishing and question 1. Not
+   one of the eight design states, but it is a real server stage, so it gets
+   its own file rather than being squeezed into another state. #}
+<section class="ready state" data-state="ready" id="state-ready">
+
+    <span class="ready__check">
+        <svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>
+    </span>
+
+    <h1 class="state__title">Questions ready.</h1>
+    <p class="state__lead">
+        Three questions written from what the agent just read. It writes the last two
+        later, once it has seen how this class is doing.
+    </p>
+
+    <div class="ready__slots">
+        <span class="slot-chip">
+            <svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg> Q1 &middot; Medium
+        </span>
+        <span class="slot-chip">
+            <svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg> Q2 &middot; Medium
+        </span>
+        <span class="slot-chip">
+            <svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg> Q3 &middot; Medium
+        </span>
+        <span class="slot-chip slot-chip--pending">
+            <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg> Q4 &middot; Written live
+        </span>
+        <span class="slot-chip slot-chip--pending">
+            <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg> Q5 &middot; Written live
+        </span>
+    </div>
+
+    <p class="state__lead" id="ready-hint">Press <b>Start</b> when the room is settled.</p>
+
+</section>

@@ -1,0 +1,57 @@
+[
+    {
+        "text": "What does CPU stand for?",
+        "options": [
+            "Central Processing Unit",
+            "Computer Personal Unit",
+            "Central Program Utility",
+            "Core Processing Utility"
+        ],
+        "correct_index": 0,
+        "difficulty": "easy",
+        "explanation": "CPU is short for Central Processing Unit, the chip that carries out instructions.",
+        "source_url": "https://en.wikipedia.org/wiki/Central_processing_unit"
+    },
+    {
+        "text": "Which company created the Python programming language?",
+        "options": ["Google", "None — it was one person's project", "Microsoft", "IBM"],
+        "correct_index": 1,
+        "difficulty": "medium",
+        "explanation": "Guido van Rossum created Python as a personal project starting in 1989.",
+        "source_url": "https://en.wikipedia.org/wiki/Python_(programming_language)"
+    },
+    {
+        "text": "What does 'HTTP' stand for?",
+        "options": [
+            "HyperText Transfer Protocol",
+            "High Transfer Text Process",
+            "HyperText Transmission Path",
+            "Host Transfer Text Protocol"
+        ],
+        "correct_index": 0,
+        "difficulty": "easy",
+        "explanation": "HTTP (HyperText Transfer Protocol) is the protocol web browsers use to fetch pages.",
+        "source_url": "https://en.wikipedia.org/wiki/HTTP"
+    },
+    {
+        "text": "In machine learning, what is a 'hallucination'?",
+        "options": [
+            "A model crash",
+            "A confident but false output",
+            "A type of neural network layer",
+            "A GPU overheating error"
+        ],
+        "correct_index": 1,
+        "difficulty": "medium",
+        "explanation": "A hallucination is when a model states something false or made-up with full confidence.",
+        "source_url": "https://en.wikipedia.org/wiki/Hallucination_(artificial_intelligence)"
+    },
+    {
+        "text": "What is the time complexity of binary search on a sorted array?",
+        "options": ["O(n)", "O(n log n)", "O(log n)", "O(1)"],
+        "correct_index": 2,
+        "difficulty": "hard",
+        "explanation": "Binary search halves the search space each step, giving O(log n) time.",
+        "source_url": "https://en.wikipedia.org/wiki/Binary_search_algorithm"
+    }
+]

@@ -1,0 +1,17 @@
+{# AGENT LIVE ACTIVITY. Reads the same agent_event stream the server has
+   always sent; it just presents each event as a short observable step
+   (SEARCH / SOURCES / ANALYZE / QUESTION / WAITING) instead of a log line.
+   No raw JSON, no prompts, no stack traces - the event's `detail` field
+   stays server-side. #}
+<aside class="activity" aria-label="Agent live activity">
+    <div class="activity__head">
+        <svg class="icon" aria-hidden="true"><use href="#i-activity"></use></svg>
+        Agent live activity
+    </div>
+    <div class="activity__feed" id="activity-feed" role="log" aria-live="polite">
+        <div class="activity__idle" id="activity-idle">
+            <span class="pulse-ring"></span>
+            Standing by, waiting for a topic.
+        </div>
+    </div>
+</aside>

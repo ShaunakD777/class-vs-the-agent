@@ -1,0 +1,43 @@
+{# STATE 6 - DIFFICULTY CHECK. The teaching moment, so it takes the whole
+   screen for its four seconds: class performance (evidence) -> the agent's
+   decision (the dial) -> what changes next (the headline). #}
+<div class="difficulty-overlay" id="state-difficulty">
+    <div class="dif">
+
+        <div class="dif__body">
+            <p class="flow">
+                <b>Class performance</b>
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                Agent decision
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                <span class="is-last">Questions 4 &amp; 5</span>
+            </p>
+
+            <h1 class="dif__headline" id="difficulty-headline">Raising the difficulty.</h1>
+
+            <p class="dif__evidence">
+                <b id="difficulty-accuracy">&mdash;</b>
+                <span>of the class got the first three questions right.</span>
+            </p>
+
+            <p class="dif__reason" id="difficulty-reason"></p>
+        </div>
+
+        <div class="dial">
+            <svg viewBox="0 0 220 140" aria-hidden="true">
+                <path class="dial__arc" d="M20 108 A90 90 0 0 1 200 108" />
+                <path class="dial__fill" id="dial-fill" d="M20 108 A90 90 0 0 1 200 108"
+                      stroke-dasharray="282.7" stroke-dashoffset="282.7" />
+                <line class="dial__needle" id="dial-needle" x1="110" y1="108" x2="110" y2="34" />
+                <circle class="dial__hub" cx="110" cy="108" r="7" />
+            </svg>
+            <p class="dial__level" id="dial-level">Medium</p>
+            <p class="dial__scale">
+                <span data-level="easy">Easy</span>
+                <span data-level="medium">Medium</span>
+                <span data-level="hard">Hard</span>
+            </p>
+        </div>
+
+    </div>
+</div>

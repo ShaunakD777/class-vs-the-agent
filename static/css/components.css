@@ -1,0 +1,198 @@
+/* Components shared by the host presentation and the player UI: buttons,
+   pills, status badges, cards, the answer identity system and the response
+   distribution bar. Host-only shell pieces live in host.css. */
+
+/* ---------- answer identity ------------------------------------------
+   Four fixed slots, each with its own colour and its own shape. The same
+   pairing is used on the projector and on the phone so a student can match
+   "the orange triangle" between the two screens. */
+.ans-a { --ans: var(--orange); --ans-ink: #14182B; }
+.ans-b { --ans: var(--blue);   --ans-ink: #F7F5F0; }
+.ans-c { --ans: var(--green);  --ans-ink: #0F1322; }
+.ans-d { --ans: var(--pink);   --ans-ink: #14182B; }
+
+/* ---------- buttons -------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s3);
+    font-family: var(--font-body);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+    border-radius: var(--r-control);
+    padding: 0.62em 1.15em;
+    min-height: 48px;
+    background: var(--surface-2);
+    color: var(--text);
+    transition: background var(--t-fast), border-color var(--t-fast),
+                color var(--t-fast), transform var(--t-fast);
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn--primary {
+    background: var(--orange);
+    color: #14182B;
+    border-color: var(--orange);
+}
+.btn--primary:hover { background: #FF8C5D; }
+
+.btn--ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--text-70);
+}
+.btn--ghost:hover { border-color: var(--text-50); color: var(--text); }
+
+.btn--quiet {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-50);
+}
+.btn--quiet:hover { color: var(--text); }
+
+.btn:disabled {
+    opacity: 0.4;
+    transform: none;
+}
+
+/* ---------- pills and status badges ---------------------------------- */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: var(--fs-meta, 15px);
+    line-height: 1;
+    font-weight: 500;
+    padding: 0.52em 0.9em;
+    border-radius: var(--r-pill);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-70);
+    white-space: nowrap;
+    max-width: 34ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pill--accent {
+    border-color: rgba(255, 122, 69, 0.45);
+    background: var(--orange-wash);
+    color: var(--orange);
+}
+
+.pill--mono { font-family: var(--font-mono); }
+
+.pill__dim { color: var(--text-35); }
+.pill__num { color: var(--text); font-weight: 700; }
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.4em 0.75em;
+    border-radius: var(--r-control);
+    border: 1px solid var(--line);
+    color: var(--text-70);
+}
+
+.badge--live { border-color: rgba(255, 122, 69, 0.45); color: var(--orange); background: var(--orange-wash); }
+.badge--ok { border-color: rgba(45, 203, 145, 0.45); color: var(--green); background: var(--green-wash); }
+.badge--warn { border-color: rgba(255, 92, 135, 0.45); color: var(--pink); background: var(--pink-wash); }
+
+/* A small pulsing dot for "something is happening / waiting on you". */
+.dot {
+    width: 0.45em;
+    height: 0.45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+    animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* ---------- surfaces ------------------------------------------------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    padding: var(--s5);
+}
+
+.card--hero { border-radius: var(--r-hero); padding: var(--s6); }
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-50);
+}
+
+/* ---------- response distribution bar -------------------------------- */
+.dist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+    font-size: var(--fs-body, 16px);
+}
+
+.dist__row {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    color: var(--ans, var(--text-50));
+    transition: opacity var(--t-mid);
+}
+
+.dist__row .shape { width: 0.8em; height: 0.8em; }
+
+.dist__label {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-70);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dist__track {
+    flex: none;
+    width: 34%;
+    height: 10px;
+    border-radius: var(--r-pill);
+    background: rgba(247, 245, 240, 0.08);
+    overflow: hidden;
+}
+
+.dist__fill {
+    height: 100%;
+    width: 0;
+    border-radius: var(--r-pill);
+    background: currentColor;
+    transition: width var(--t-slow);
+}
+
+.dist__pct {
+    flex: none;
+    width: 3.4em;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text);
+}
+
+.dist__row--correct .dist__label { color: var(--text); font-weight: 700; }
+.dist__row--muted { opacity: 0.55; }

@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<!-- Design mockup only: 8 static stage states with placeholder data, no server, no WebSocket wiring. See spec.md for real behaviour and templates/host.html for the working (unstyled) skeleton this design will later replace. Fluid layout: fills whatever window/screen it runs in (laptop, smart board, projector), no fixed canvas. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Class vs. The Agent - Host Screen Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>
+<style>
+  :root {
+    --navy: #14182B;
+    --navy-raised: #1D2242;
+    --navy-raised-2: #242B52;
+    --line: rgba(247, 245, 240, 0.12);
+    --line-soft: rgba(247, 245, 240, 0.07);
+    --off-white: #F7F5F0;
+    --off-white-70: rgba(247, 245, 240, 0.7);
+    --off-white-50: rgba(247, 245, 240, 0.5);
+    --orange: #FF7A45;
+    --blue: #4C7DFF;
+    --teal: #2FBF8F;
+    --rose: #FF5C8A;
+
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "DM Sans", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+
+    --radius-card: 20px;
+    --radius-pill: 999px;
+
+    /* Fluid type scale. Floor never drops below the spec's 32px back-row minimum;
+       preferred size tracks viewport width so the same page fills a laptop
+       window or a 1920x1080 projector without a fixed canvas; ceiling stops
+       runaway growth on very large displays (smart boards). */
+    --fs-0: clamp(28px, 1.5vw, 34px);   /* wordmark, ctrl buttons */
+    --fs-1: clamp(32px, 1.7vw, 40px);   /* floor: pills, thoughts lines, labels, source line */
+    --fs-2: clamp(34px, 1.85vw, 44px);  /* subtext, draft card, timer answered-num */
+    --fs-3: clamp(40px, 2.3vw, 50px);   /* option text, lb-score, stat-num small */
+    --fs-4: clamp(48px, 2.7vw, 62px);   /* section headlines */
+    --fs-5: clamp(58px, 3.3vw, 74px);   /* player-count-num, timer ring-num */
+    --fs-6: clamp(64px, 3.6vw, 82px);   /* question text */
+    --fs-7: clamp(80px, 4.6vw, 108px);  /* difficulty banner headline */
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0A0C16;
+    color: var(--off-white);
+    font-family: var(--font-body);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* ---------- review toolbar (tooling chrome, not part of the product screen) ---------- */
+  .review-toolbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: #05060c;
+    border-bottom: 1px solid var(--line-soft);
+    font-family: var(--font-mono);
+  }
+
+  .review-toolbar .rt-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--off-white-50);
+    margin-right: 4px;
+  }
+
+  .rt-tab {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--off-white-70);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+
+  .rt-tab.is-active {
+    background: var(--orange);
+    color: var(--navy);
+    border-color: var(--orange);
+    font-weight: 600;
+  }
+
+  .rt-tab:hover:not(.is-active) {
+    border-color: var(--off-white-50);
+    color: var(--off-white);
+  }
+
+  /* ---------- frame: fills whatever space is left under the toolbar ---------- */
+  .frame-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--navy);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: clamp(12px, 1.4vh, 20px) clamp(24px, 2.3vw, 44px);
+    background: var(--navy-raised);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-0);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .wordmark span { color: var(--orange); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--fs-1);
+    line-height: 1;
+    padding: 0.55em 1em;
+    border-radius: var(--radius-pill);
+    background: var(--navy-raised-2);
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  .pill i { font-size: 0.9em; }
+  .pill.pill-accent { border-color: rgba(255, 122, 69, 0.5); color: var(--orange); }
+  .pill .pill-dim { color: var(--off-white-50); font-size: 0.85em; margin-right: 2px; }
+
+  /* ---------- stage grid ---------- */
+  .stage-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 7fr 3fr;
+  }
+
+  .frame[data-stage="researching"] .stage-grid {
+    grid-template-columns: 4fr 6fr;
+  }
+
+  .stage-area {
+    padding: clamp(24px, 4.5vh, 56px) clamp(28px, 4vw, 64px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    min-width: 0;
+  }
+
+  .thoughts {
+    background: #10142A;
+    border-left: 1px solid var(--line);
+    padding: clamp(20px, 3.5vh, 40px) clamp(20px, 3vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow: auto;
+    min-width: 0;
+  }
+
+  .thoughts-title {
+    font-family: var(--font-mono);
+    font-size: var(--fs-1);
+    color: var(--off-white-50);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .thought-line {
+    font-family: var(--font-mono);
+    font-size: var(--fs-1);
+    line-height: 1.5;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    color: var(--off-white-70);
+  }
+
+  .thought-line i { flex: none; font-size: 1em; margin-top: 0.1em; }
+  .thought-line .kind-search i { color: var(--blue); }
+  .thought-line .kind-thought i { color: var(--teal); }
+  .thought-line .kind-tool i { color: var(--orange); }
+  .thought-line .kind-output { color: var(--off-white); }
+  .thought-line .kind-output i { color: var(--off-white); }
+
+  .cursor {
+    display: inline-block;
+    width: 0.4em;
+    height: 0.9em;
+    background: var(--orange);
+    margin-left: 4px;
+    vertical-align: -0.15em;
+  }
+
+  /* ---------- views ---------- */
+  .view { display: none; }
+  .view.is-active { display: flex; flex-direction: column; min-height: 100%; justify-content: center; }
+  .thought-set { display: none; flex-direction: column; gap: 18px; }
+  .thought-set.is-active { display: flex; }
+
+  .headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-4);
+    line-height: 1.15;
+    margin: 0 0 18px;
+  }
+
+  .subtext {
+    font-size: var(--fs-2);
+    line-height: 1.4;
+    color: var(--off-white-70);
+    margin: 0 0 32px;
+    max-width: 60ch;
+  }
+
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--fs-1);
+    border-radius: var(--radius-pill);
+    border: none;
+    padding: 0.5em 1.1em;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-primary { background: var(--orange); color: var(--navy); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--off-white);
+    border: 2px solid var(--line);
+  }
+  .btn-ghost:hover { border-color: var(--off-white-50); }
+
+  /* ---------- LOBBY ---------- */
+  .lobby-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 26%) 1fr;
+    gap: clamp(28px, 4vw, 64px);
+    align-items: start;
+  }
+
+  .qr-card {
+    background: var(--navy-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: clamp(14px, 1.5vw, 30px);
+    max-width: 420px;
+  }
+
+  .qr-card canvas { display: block; width: 100%; height: auto; }
+
+  .join-link {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-1);
+    color: var(--orange);
+    text-align: center;
+  }
+
+  .lobby-right { display: flex; flex-direction: column; min-width: 0; }
+
+  .player-count-row {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .player-count-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-5);
+    color: var(--orange);
+  }
+
+  .player-count-label { font-size: var(--fs-2); color: var(--off-white-70); }
+
+  .name-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .name-chip {
+    font-family: var(--font-mono);
+    font-size: var(--fs-1);
+    padding: 0.3em 0.7em;
+    border-radius: var(--radius-pill);
+    background: var(--navy-raised-2);
+    border: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: chip-in 0.5s ease forwards;
+  }
+
+  @keyframes chip-in { to { opacity: 1; transform: translateY(0); } }
+
+  .field-label {
+    font-size: var(--fs-1);
+    color: var(--off-white-70);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .topic-row { display: flex; gap: 18px; align-items: center; }
+
+  .topic-input {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-body);
+    font-size: var(--fs-2);
+    padding: 0.4em 0.6em;
+    border-radius: var(--radius-card);
+    border: 2px solid var(--line);
+    background: var(--navy-raised);
+    color: var(--off-white);
+  }
+
+  .topic-input::placeholder { color: var(--off-white-50); }
+  .topic-input:focus { outline: none; border-color: var(--blue); }
+
+  .topic-actions { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+
+  /* ---------- RESEARCHING ---------- */
+  .research-steps { display: flex; flex-direction: column; gap: 18px; margin: 28px 0 36px; }
+
+  .research-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-2);
+  }
+
+  .research-step i { font-size: 1.05em; }
+  .research-step.step-done { color: var(--off-white-70); }
+  .research-step.step-done i { color: var(--teal); }
+  .research-step.step-active i { color: var(--orange); }
+  .research-step.step-pending { color: var(--off-white-50); }
+  .research-step.step-pending i { color: var(--off-white-50); }
+
+  .think-orb {
+    width: clamp(120px, 10vw, 220px);
+    height: clamp(120px, 10vw, 220px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 122, 69, 0.55), rgba(76, 125, 255, 0.25) 70%, transparent 75%);
+    filter: blur(0.5px);
+    animation: orb-pulse 2.4s ease-in-out infinite;
+    align-self: flex-start;
+  }
+
+  @keyframes orb-pulse {
+    0%, 100% { transform: scale(0.94); opacity: 0.75; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+
+  /* ---------- QUESTION ---------- */
+  .question-layout { display: grid; grid-template-columns: 1fr clamp(160px, 13vw, 260px); gap: clamp(24px, 3vw, 48px); align-items: start; }
+  .question-text { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-6); line-height: 1.2; margin: 0 0 36px; }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(14px, 1.4vw, 24px);
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0.55em 0.7em;
+    border-radius: var(--radius-card);
+    font-size: var(--fs-3);
+    font-weight: 700;
+    color: var(--navy);
+    font-family: var(--font-body);
+  }
+
+  .option .shape { flex: none; width: 0.65em; height: 0.65em; background: var(--navy); }
+  .shape.tri { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+  .shape.diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+  .shape.circle { border-radius: 50%; }
+  .shape.square { border-radius: 6px; }
+
+  .option-a { background: var(--orange); }
+  .option-b { background: var(--blue); color: var(--off-white); }
+  .option-b .shape { background: var(--off-white); }
+  .option-c { background: var(--teal); }
+  .option-d { background: var(--rose); }
+
+  .timer-col { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  .timer-ring { position: relative; width: clamp(120px, 10vw, 220px); height: clamp(120px, 10vw, 220px); }
+  .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .timer-ring .ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-5);
+    color: var(--orange);
+  }
+
+  .answered-box { text-align: center; }
+  .answered-num { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2); }
+  .answered-lbl { font-size: var(--fs-1); color: var(--off-white-70); }
+
+  /* ---------- REVEAL ---------- */
+  .reveal-top { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
+  .reveal-top i { font-size: var(--fs-4); color: var(--teal); }
+
+  .reveal-bars { display: flex; flex-direction: column; gap: 18px; margin-bottom: 32px; }
+
+  .reveal-bar-row { display: flex; align-items: center; gap: 18px; }
+  .reveal-bar-row .shape { flex: none; width: 28px; height: 28px; }
+  .reveal-bar-track { flex: 1; height: 12px; position: relative; min-width: 0; }
+  .reveal-bar-fill { height: 100%; border-radius: var(--radius-pill); }
+  .reveal-bar-pct { width: 4.5em; text-align: right; font-family: var(--font-mono); font-size: var(--fs-2); flex: none; }
+
+  .fill-a { background: var(--orange); }
+  .fill-b { background: var(--blue); }
+  .fill-c { background: var(--teal); }
+  .fill-d { background: var(--rose); }
+
+  .commentary-bubble {
+    background: var(--navy-raised);
+    border: 1px solid rgba(76, 125, 255, 0.4);
+    border-radius: var(--radius-card);
+    padding: 0.7em 0.85em;
+    font-size: var(--fs-2);
+    line-height: 1.45;
+    max-width: 74ch;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .commentary-bubble i { color: var(--blue); font-size: 1.1em; flex: none; margin-top: 0.1em; }
+
+  .source-line { font-size: var(--fs-1); color: var(--off-white-50); display: flex; align-items: center; gap: 12px; }
+
+  /* ---------- LEADERBOARD ---------- */
+  .lb-list { display: flex; flex-direction: column; gap: 4px; margin-top: 24px; }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0.4em 0.6em;
+    border-radius: var(--radius-card);
+    font-size: var(--fs-2);
+  }
+
+  .lb-row:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+  .lb-row.jumped { background: rgba(255, 122, 69, 0.12); border: 1px solid rgba(255, 122, 69, 0.4); }
+
+  .lb-rank { width: 1.4em; flex: none; font-family: var(--font-display); font-weight: 700; color: var(--off-white-50); }
+  .lb-name { flex: 1; min-width: 0; font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-score { flex: none; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-3); width: 3.2em; text-align: right; }
+  .lb-move { flex: none; display: flex; align-items: center; gap: 6px; width: 2.6em; justify-content: flex-end; font-size: 0.85em; }
+  .lb-move.up { color: var(--teal); }
+  .lb-move.down { color: var(--rose); }
+
+  /* ---------- DIFFICULTY (full-screen overlay) ---------- */
+  .difficulty-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(255, 122, 69, 0.22), transparent 60%),
+      var(--navy);
+    padding: 0 clamp(32px, 8vw, 120px);
+  }
+
+  .frame[data-stage="difficulty"] .difficulty-overlay { display: flex; }
+  .frame[data-stage="difficulty"] .topbar,
+  .frame[data-stage="difficulty"] .stage-grid { visibility: hidden; }
+
+  .difficulty-overlay i { font-size: clamp(60px, 6vw, 96px); color: var(--orange); margin-bottom: 24px; }
+  .difficulty-overlay .headline { font-size: var(--fs-7); color: var(--orange); margin-bottom: 20px; }
+  .difficulty-overlay .subtext { font-size: var(--fs-3); margin: 0 auto; }
+
+  /* ---------- APPROVAL ---------- */
+  .draft-card {
+    background: var(--navy-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 0.8em 0.9em;
+    font-size: var(--fs-2);
+    line-height: 1.5;
+    max-width: 80ch;
+    margin-bottom: 32px;
+  }
+
+  .waiting-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--fs-1);
+    color: var(--off-white-70);
+    margin-bottom: 28px;
+  }
+
+  .waiting-badge .dot {
+    width: 0.4em;
+    height: 0.4em;
+    border-radius: 50%;
+    background: var(--orange);
+    animation: dot-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ---------- FINAL ---------- */
+  .final-wrap { display: grid; grid-template-columns: 1fr clamp(260px, 30vw, 480px); gap: clamp(28px, 4vw, 60px); align-items: center; min-height: 100%; }
+
+  .podium { display: flex; align-items: flex-end; gap: clamp(10px, 1.4vw, 20px); height: clamp(200px, 32vh, 380px); }
+
+  .podium-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .podium-name {
+    font-family: var(--font-mono);
+    font-size: clamp(20px, 1.3vw, 30px);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .podium-score { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2); color: var(--orange); }
+  .podium-bar {
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 16px;
+  }
+
+  .podium-col.first .podium-bar { height: 100%; background: var(--orange); }
+  .podium-col.second .podium-bar { height: 68%; background: var(--navy-raised-2); border: 1px solid var(--line); }
+  .podium-col.third .podium-bar { height: 48%; background: var(--navy-raised-2); border: 1px solid var(--line); }
+  .podium-bar i { font-size: clamp(26px, 1.8vw, 40px); color: var(--navy); }
+  .podium-col.second .podium-bar i, .podium-col.third .podium-bar i { color: var(--orange); }
+
+  .final-side { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .stat-card {
+    background: var(--navy-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    padding: 0.6em 0.75em;
+  }
+  .stat-num { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-4); color: var(--teal); }
+  .stat-lbl { font-size: var(--fs-1); color: var(--off-white-70); margin-top: 4px; }
+
+  .notes-line { display: flex; align-items: flex-start; gap: 12px; font-size: var(--fs-2); }
+  .notes-line i { color: var(--teal); font-size: 1.05em; flex: none; margin-top: 0.1em; }
+
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    width: 14px;
+    height: 22px;
+    opacity: 0.9;
+    animation: confetti-fall linear infinite;
+  }
+
+  @keyframes confetti-fall {
+    to { transform: translateY(120vh) rotate(400deg); }
+  }
+
+  /* ---------- presenter controls ---------- */
+  .presenter-hotzone {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: clamp(280px, 24vw, 460px);
+    height: clamp(90px, 12vh, 160px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 20px;
+  }
+
+  .presenter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .presenter-hotzone:hover .presenter-controls { opacity: 1; transform: translateY(0); }
+
+  .ctrl-btn {
+    font-family: var(--font-mono);
+    font-size: clamp(18px, 1.1vw, 24px);
+    color: var(--off-white);
+    background: rgba(29, 34, 66, 0.92);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 0.5em 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .frame[data-stage="lobby"] .presenter-hotzone,
+  .frame[data-stage="researching"] .presenter-hotzone,
+  .frame[data-stage="difficulty"] .presenter-hotzone,
+  .frame[data-stage="approval"] .presenter-hotzone,
+  .frame[data-stage="final"] .presenter-hotzone {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .name-chip { animation: none; opacity: 1; transform: none; }
+    .think-orb { animation: none; }
+    .cursor { animation: none; }
+    .waiting-badge .dot { animation: none; }
+    .confetti-piece { animation: none; display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="review-toolbar">
+    <span class="rt-label">Design preview, jump to a stage</span>
+    <button class="rt-tab" data-tab="lobby">Lobby</button>
+    <button class="rt-tab" data-tab="researching">Researching</button>
+    <button class="rt-tab" data-tab="question">Question</button>
+    <button class="rt-tab" data-tab="reveal">Reveal</button>
+    <button class="rt-tab" data-tab="leaderboard">Leaderboard</button>
+    <button class="rt-tab" data-tab="difficulty">Difficulty banner</button>
+    <button class="rt-tab" data-tab="approval">Approval</button>
+    <button class="rt-tab" data-tab="final">Final</button>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame" id="frame" data-stage="lobby">
+
+      <header class="topbar">
+        <div class="wordmark">Class vs. <span>The Agent</span></div>
+        <div class="topbar-right" id="topbarRight">
+          <div class="pill pill-accent" id="topicPill" style="display:none;">
+            <i class="ph-bold ph-planet"></i> Space missions in the news
+          </div>
+          <div class="pill" id="questionPill" style="display:none;">
+            <span class="pill-dim">Q</span> 3 / 5
+          </div>
+          <div class="pill">
+            <i class="ph-bold ph-users-three"></i> 47
+          </div>
+        </div>
+      </header>
+
+      <div class="stage-grid">
+        <section class="stage-area" id="stageArea">
+
+          <!-- LOBBY -->
+          <div class="view" data-view="lobby">
+            <h1 class="headline">Scan in. The agent is warming up.</h1>
+            <p class="subtext">Open your camera, point it at the code, type a nickname.</p>
+            <div class="lobby-grid">
+              <div>
+                <div class="qr-card">
+                  <canvas id="qrCanvas" width="900" height="900"></canvas>
+                </div>
+                <div class="join-link">cvta.app/join/7qk2</div>
+              </div>
+              <div class="lobby-right">
+                <div class="player-count-row">
+                  <span class="player-count-num">47</span>
+                  <span class="player-count-label">players in</span>
+                </div>
+                <div class="name-chips" id="nameChips"></div>
+                <div class="topic-row">
+                  <div style="flex:1; min-width:0;">
+                    <label class="field-label" for="topicInput">Topic</label>
+                    <input class="topic-input" id="topicInput" type="text" placeholder="Type the topic the class shouted..." />
+                  </div>
+                </div>
+                <div class="topic-actions">
+                  <button class="btn btn-primary"><i class="ph-bold ph-arrow-right"></i> Start research</button>
+                  <button class="btn btn-ghost"><i class="ph-bold ph-shield-check"></i> Use safe mode</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RESEARCHING -->
+          <div class="view" data-view="researching">
+            <h1 class="headline">Researching: space missions in the news</h1>
+            <div class="research-steps">
+              <div class="research-step step-done"><i class="ph-bold ph-check-circle"></i> Searching sources</div>
+              <div class="research-step step-active"><i class="ph-bold ph-magnifying-glass"></i> Reading results</div>
+              <div class="research-step step-pending"><i class="ph-bold ph-circle"></i> Drafting questions</div>
+            </div>
+            <div class="think-orb"></div>
+          </div>
+
+          <!-- QUESTION -->
+          <div class="view" data-view="question">
+            <div class="question-layout">
+              <div style="min-width:0;">
+                <p class="question-text">Which spacecraft made its closest flyby of Europa last month?</p>
+                <div class="options-grid">
+                  <div class="option option-a"><span class="shape tri"></span> Europa Clipper</div>
+                  <div class="option option-b"><span class="shape diamond"></span> Juno</div>
+                  <div class="option option-c"><span class="shape circle"></span> Cassini</div>
+                  <div class="option option-d"><span class="shape square"></span> New Horizons</div>
+                </div>
+              </div>
+              <div class="timer-col">
+                <div class="timer-ring">
+                  <svg viewBox="0 0 220 220">
+                    <circle cx="110" cy="110" r="96" fill="none" stroke="rgba(247,245,240,0.12)" stroke-width="14" />
+                    <circle cx="110" cy="110" r="96" fill="none" stroke="#FF7A45" stroke-width="14" stroke-linecap="round" stroke-dasharray="603" stroke-dashoffset="180" />
+                  </svg>
+                  <div class="ring-num">14</div>
+                </div>
+                <div class="answered-box">
+                  <div class="answered-num">34 / 47</div>
+                  <div class="answered-lbl">answered</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REVEAL -->
+          <div class="view" data-view="reveal">
+            <div class="reveal-top">
+              <i class="ph-bold ph-check-circle"></i>
+              <h1 class="headline" style="margin:0;">Europa Clipper was correct</h1>
+            </div>
+            <div class="reveal-bars">
+              <div class="reveal-bar-row">
+                <span class="shape tri" style="background:var(--orange);"></span>
+                <div class="reveal-bar-track"><div class="reveal-bar-fill fill-a" style="width:61%;"></div></div>
+                <span class="reveal-bar-pct">61%</span>
+              </div>
+              <div class="reveal-bar-row">
+                <span class="shape diamond" style="background:var(--blue);"></span>
+                <div class="reveal-bar-track"><div class="reveal-bar-fill fill-b" style="width:14%;"></div></div>
+                <span class="reveal-bar-pct">14%</span>
+              </div>
+              <div class="reveal-bar-row">
+                <span class="shape circle" style="background:var(--teal);"></span>
+                <div class="reveal-bar-track"><div class="reveal-bar-fill fill-c" style="width:9%;"></div></div>
+                <span class="reveal-bar-pct">9%</span>
+              </div>
+              <div class="reveal-bar-row">
+                <span class="shape square" style="background:var(--rose);"></span>
+                <div class="reveal-bar-track"><div class="reveal-bar-fill fill-d" style="width:16%;"></div></div>
+                <span class="reveal-bar-pct">16%</span>
+              </div>
+            </div>
+            <div class="commentary-bubble">
+              <i class="ph-bold ph-sparkle"></i>
+              <span>Clean recovery from Q2, stackoverflowed. byte_ninja and quantum_qubit both locked it in under five seconds.</span>
+            </div>
+            <div class="source-line"><i class="ph-bold ph-link"></i> Source: NASA JPL press release</div>
+          </div>
+
+          <!-- LEADERBOARD -->
+          <div class="view" data-view="leaderboard">
+            <h1 class="headline">Leaderboard after Q3</h1>
+            <div class="lb-list">
+              <div class="lb-row"><span class="lb-rank">1</span><span class="lb-name">quantum_qubit</span><span class="lb-score">2140</span><span class="lb-move up"><i class="ph-bold ph-arrow-up"></i>1</span></div>
+              <div class="lb-row"><span class="lb-rank">2</span><span class="lb-name">byte_ninja</span><span class="lb-score">2015</span><span class="lb-move down"><i class="ph-bold ph-arrow-down"></i>1</span></div>
+              <div class="lb-row"><span class="lb-rank">3</span><span class="lb-name">stackoverflowed</span><span class="lb-score">1870</span><span class="lb-move up"><i class="ph-bold ph-arrow-up"></i>2</span></div>
+              <div class="lb-row jumped"><span class="lb-rank">4</span><span class="lb-name">cache_me_ousside</span><span class="lb-score">1795</span><span class="lb-move up"><i class="ph-bold ph-arrow-up"></i>5</span></div>
+              <div class="lb-row"><span class="lb-rank">5</span><span class="lb-name">the_a_star</span><span class="lb-score">1690</span><span class="lb-move down"><i class="ph-bold ph-arrow-down"></i>2</span></div>
+            </div>
+          </div>
+
+          <!-- APPROVAL -->
+          <div class="view" data-view="approval">
+            <h1 class="headline">Draft winners announcement</h1>
+            <div class="waiting-badge"><span class="dot"></span> Waiting on you</div>
+            <div class="draft-card">
+              Huge round tonight. Top of the podium: quantum_qubit, byte_ninja and stackoverflowed. Well played, everyone.
+            </div>
+            <div class="topic-actions">
+              <button class="btn btn-primary"><i class="ph-bold ph-check"></i> Approve</button>
+              <button class="btn btn-ghost"><i class="ph-bold ph-x"></i> Skip</button>
+            </div>
+          </div>
+
+          <!-- FINAL -->
+          <div class="view" data-view="final">
+            <div class="final-wrap">
+              <div class="podium">
+                <div class="podium-col second">
+                  <div class="podium-name">byte_ninja</div>
+                  <div class="podium-score">2015</div>
+                  <div class="podium-bar"><i class="ph-bold ph-medal"></i></div>
+                </div>
+                <div class="podium-col first">
+                  <div class="podium-name">quantum_qubit</div>
+                  <div class="podium-score">2140</div>
+                  <div class="podium-bar"><i class="ph-bold ph-trophy"></i></div>
+                </div>
+                <div class="podium-col third">
+                  <div class="podium-name">stackoverflowed</div>
+                  <div class="podium-score">1870</div>
+                  <div class="podium-bar"><i class="ph-bold ph-medal"></i></div>
+                </div>
+              </div>
+              <div class="final-side">
+                <div class="stat-card">
+                  <div class="stat-num">68%</div>
+                  <div class="stat-lbl">Class accuracy</div>
+                </div>
+                <div class="notes-line"><i class="ph-bold ph-check-circle"></i> Revision notes sent to your phones.</div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <aside class="thoughts" id="thoughtsPanel">
+          <div class="thoughts-title">Agent thoughts</div>
+
+          <div class="thought-set" data-view="lobby">
+            <div class="thought-line kind-output"><i class="ph-bold ph-moon-stars"></i> Standing by. Waiting for a topic.</div>
+          </div>
+
+          <div class="thought-set" data-view="researching">
+            <div class="thought-line kind-search"><i class="ph-bold ph-magnifying-glass"></i> "Europa Clipper flyby latest news"</div>
+            <div class="thought-line kind-tool"><i class="ph-bold ph-check-circle"></i> 3 sources found. NASA JPL, Reuters, Space.com.</div>
+            <div class="thought-line kind-thought"><i class="ph-bold ph-brain"></i> The JPL press release has a solid, checkable number.</div>
+            <div class="thought-line kind-search"><i class="ph-bold ph-magnifying-glass"></i> "ISRO Gaganyaan 2026 launch date"</div>
+            <div class="thought-line kind-tool"><i class="ph-bold ph-check-circle"></i> 2 sources found. ISRO, The Hindu.</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Q1 drafted, medium. Source: NASA JPL.</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Q2 drafted, medium. Source: ISRO.<span class="cursor"></span></div>
+          </div>
+
+          <div class="thought-set" data-view="question">
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Q3 drafted, medium. Source: NASA JPL.</div>
+            <div class="thought-line kind-tool"><i class="ph-bold ph-wrench"></i> Standing by until the timer ends.</div>
+          </div>
+
+          <div class="thought-set" data-view="reveal">
+            <div class="thought-line kind-tool"><i class="ph-bold ph-wrench"></i> Get round stats</div>
+            <div class="thought-line kind-thought"><i class="ph-bold ph-brain"></i> Fast, accurate answers from three players worth naming.</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Commentary drafted.<span class="cursor"></span></div>
+          </div>
+
+          <div class="thought-set" data-view="leaderboard">
+            <div class="thought-line kind-tool"><i class="ph-bold ph-wrench"></i> Get round stats</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Standings updated.</div>
+          </div>
+
+          <div class="thought-set" data-view="approval">
+            <div class="thought-line kind-tool"><i class="ph-bold ph-wrench"></i> Request approval</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Waiting for the presenter.<span class="cursor"></span></div>
+          </div>
+
+          <div class="thought-set" data-view="final">
+            <div class="thought-line kind-tool"><i class="ph-bold ph-wrench"></i> Save revision note x5</div>
+            <div class="thought-line kind-output"><i class="ph-bold ph-arrow-right"></i> Notes ready.</div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="difficulty-overlay">
+        <i class="ph-bold ph-gauge"></i>
+        <h1 class="headline">Raising the difficulty.</h1>
+        <p class="subtext">76% of you nailed the last three questions. Let's make the last two count.</p>
+      </div>
+
+      <div class="presenter-hotzone">
+        <div class="presenter-controls">
+          <button class="ctrl-btn"><i class="ph-bold ph-skip-forward"></i> Next</button>
+          <button class="ctrl-btn"><i class="ph-bold ph-pause"></i> Pause</button>
+          <button class="ctrl-btn"><i class="ph-bold ph-fast-forward"></i> Skip</button>
+          <button class="ctrl-btn"><i class="ph-bold ph-shield-check"></i> Safe mode</button>
+        </div>
+      </div>
+
+      <div id="confettiLayer" style="position:absolute; inset:0; overflow:hidden; pointer-events:none;"></div>
+
+    </div>
+  </div>
+
+<script>
+  var NICKNAMES = [
+    "byte_ninja", "segfault_sal", "null_pointer", "stackoverflowed",
+    "recursion_queen", "cache_me_ousside", "the_a_star", "greedy_algo",
+    "forkbomb_fatima", "quantum_qubit", "div_by_zero", "big_o_bella"
+  ];
+
+  var frame = document.getElementById("frame");
+  var topicPill = document.getElementById("topicPill");
+  var questionPill = document.getElementById("questionPill");
+
+  function setStage(stage) {
+    frame.setAttribute("data-stage", stage);
+
+    document.querySelectorAll(".view").forEach(function (el) {
+      el.classList.toggle("is-active", el.getAttribute("data-view") === stage);
+    });
+    document.querySelectorAll(".thought-set").forEach(function (el) {
+      el.classList.toggle("is-active", el.getAttribute("data-view") === stage);
+    });
+
+    topicPill.style.display = (stage === "lobby") ? "none" : "inline-flex";
+    var runningStages = ["question", "reveal", "leaderboard"];
+    questionPill.style.display = runningStages.indexOf(stage) > -1 ? "inline-flex" : "none";
+
+    document.querySelectorAll(".rt-tab").forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-tab") === stage);
+    });
+
+    replayChips();
+    renderConfetti(stage === "final");
+  }
+
+  function replayChips() {
+    var host = document.getElementById("nameChips");
+    host.innerHTML = "";
+    NICKNAMES.forEach(function (name, i) {
+      var chip = document.createElement("span");
+      chip.className = "name-chip";
+      chip.style.animationDelay = (i * 0.06) + "s";
+      chip.textContent = name;
+      host.appendChild(chip);
+    });
+  }
+
+  function renderConfetti(active) {
+    var layer = document.getElementById("confettiLayer");
+    layer.innerHTML = "";
+    if (!active) return;
+    var colors = ["#FF7A45", "#4C7DFF", "#2FBF8F", "#FF5C8A"];
+    for (var i = 0; i < 40; i++) {
+      var piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.left = (Math.random() * 100) + "%";
+      piece.style.background = colors[i % colors.length];
+      piece.style.animationDuration = (2.4 + Math.random() * 1.6) + "s";
+      piece.style.animationDelay = (Math.random() * 1.2) + "s";
+      layer.appendChild(piece);
+    }
+  }
+
+  document.querySelectorAll(".rt-tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setStage(btn.getAttribute("data-tab"));
+    });
+  });
+
+  /* deterministic placeholder QR-style pattern, not a scannable code */
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function drawQr() {
+    var canvas = document.getElementById("qrCanvas");
+    var ctx = canvas.getContext("2d");
+    var canvasSize = 900;
+    var modules = 25;
+    var size = canvasSize / modules;
+    var rand = mulberry32(1234);
+
+    ctx.fillStyle = "#1D2242";
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+    ctx.fillStyle = "#F7F5F0";
+
+    function finder(cx, cy) {
+      ctx.fillStyle = "#F7F5F0";
+      ctx.fillRect(cx * size, cy * size, 7 * size, 7 * size);
+      ctx.fillStyle = "#1D2242";
+      ctx.fillRect((cx + 1) * size, (cy + 1) * size, 5 * size, 5 * size);
+      ctx.fillStyle = "#F7F5F0";
+      ctx.fillRect((cx + 2) * size, (cy + 2) * size, 3 * size, 3 * size);
+    }
+
+    finder(0, 0);
+    finder(modules - 7, 0);
+    finder(0, modules - 7);
+
+    for (var row = 0; row < modules; row++) {
+      for (var col = 0; col < modules; col++) {
+        var inTopLeft = row < 7 && col < 7;
+        var inTopRight = row < 7 && col >= modules - 7;
+        var inBottomLeft = row >= modules - 7 && col < 7;
+        if (inTopLeft || inTopRight || inBottomLeft) continue;
+        ctx.fillStyle = "#F7F5F0";
+        if (rand() < 0.46) {
+          ctx.fillRect(col * size, row * size, size * 0.92, size * 0.92);
+        }
+      }
+    }
+  }
+
+  drawQr();
+  setStage("lobby");
+</script>
+</body>
+</html>
