@@ -5,6 +5,7 @@ after each question, the difficulty check (questions 4-5), and wrap-up
 
 import asyncio
 import json
+import traceback
 
 from groq import BadRequestError
 
@@ -125,6 +126,8 @@ async def research_topic(game_id: str, topic: str) -> None:
     try:
         questions, research_notes = await _research_with_groq(game_id, topic)
     except Exception as exc:
+        print("DEBUG: Groq research failed:")
+        traceback.print_exc()
         await log_event(
             game_id,
             "research",
@@ -136,6 +139,8 @@ async def research_topic(game_id: str, topic: str) -> None:
         try:
             questions, research_notes = await _research_with_gemini(game_id, topic)
         except Exception as exc2:
+            print("DEBUG: Gemini research failed:")
+            traceback.print_exc()
             await log_event(
                 game_id,
                 "research",
