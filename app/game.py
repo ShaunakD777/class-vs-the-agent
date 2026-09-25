@@ -48,6 +48,10 @@ async def handle_start(game_id: str) -> None:
             "DELETE FROM answer WHERE question_id IN (SELECT id FROM question WHERE game_id = ?)",
             (game_id,),
         )
+        conn.execute(
+            "DELETE FROM revision_note WHERE question_id IN (SELECT id FROM question WHERE game_id = ?)",
+            (game_id,),
+        )
         conn.execute("UPDATE player SET score = 0, streak = 0 WHERE game_id = ?", (game_id,))
 
         if researched < 3:
