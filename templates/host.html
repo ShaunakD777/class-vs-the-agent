@@ -16,15 +16,15 @@
     <title>Class vs. The Agent &mdash; Host</title>
     {% include "partials/favicon.html" %}
     {% include "partials/fonts.html" %}
-    <link rel="stylesheet" href="/static/css/tokens.css" />
-    <link rel="stylesheet" href="/static/css/base.css" />
-    <link rel="stylesheet" href="/static/css/components.css" />
-    <link rel="stylesheet" href="/static/css/host.css" />
+    <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/base.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/host.css?v={{ asset_version() }}" />
 </head>
 <body class="host">
     {% include "partials/icons.html" %}
 
-    <div class="host-frame" id="host-frame" data-stage="lobby">
+    <div class="host-frame" id="host-frame" data-stage="lobby" data-mode="{{ mode }}">
 
         {% include "host/partials/header.html" %}
 
@@ -52,7 +52,7 @@
     </div>
 
     <script>window.PRESENTER_PIN = {{ pin | tojson }};</script>
-    <script src="/static/js/ui.js"></script>
-    <script src="/static/js/host.js"></script>
+    <script src="/static/js/ui.js?v={{ asset_version() }}"></script>
+    <script src="/static/js/host.js?v={{ asset_version() }}"></script>
 </body>
 </html>

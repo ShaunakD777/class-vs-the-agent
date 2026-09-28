@@ -19,6 +19,10 @@
         final: UI.el("screen-final")
     };
 
+    function setMode(mode) {
+        if (mode) document.body.setAttribute("data-mode", mode);
+    }
+
     function showScreen(name) {
         for (var key in screens) {
             screens[key].classList.toggle("is-active", key === name);
@@ -221,6 +225,7 @@
             autoReconnecting = false;
             joinBtn.disabled = false;
 
+            setMode(data.mode);
             UI.el("me-name").textContent = data.nickname;
             UI.show(UI.el("me-tag"), true);
 
@@ -254,7 +259,20 @@
         } else if (data.type === "resumed") {
             countdown.start(data.ends_at, questionSeconds);
 
+        } else if (data.type === "mode_changed") {
+            /* The presenter switched between the main game and the wrap-up
+               quiz: a fresh game is about to start, so leave the old result. */
+            setMode(data.mode);
+            if (!screens.join.classList.contains("is-active")) {
+                countdown.stop();
+                UI.el("waiting-title").textContent =
+                    data.mode === "wrap_up" ? "Next up: the wrap-up quiz." : "Next up: a new game.";
+                UI.el("waiting-text").textContent = "Scores are back to zero. Watch the big screen.";
+                showScreen("waiting");
+            }
+
         } else if (data.type === "question_live") {
+            setMode(data.mode);
             renderQuestion(data);
             questionSeconds = data.seconds || questionSeconds;
             countdown.start(data.ends_at, questionSeconds);

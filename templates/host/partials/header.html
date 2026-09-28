@@ -1,7 +1,15 @@
 {# The orientation header. Stable across all eight states: state changes
-   happen in the main area, not up here. Never a navigation bar. #}
+   happen in the main area, not up here. Never a navigation bar.
+   Elements marked mode-main / mode-wrap only show in the main game / the
+   wrap-up quiz (see host.css). #}
 <header class="host-header">
-    <div class="wordmark">Class vs. <b>The Agent</b></div>
+    <div class="wordmark">
+        Class vs. <b>The Agent</b>
+        <span class="wordmark__mode mode-wrap">
+            <svg class="icon" aria-hidden="true"><use href="#i-flag"></use></svg>
+            Wrap-up quiz
+        </span>
+    </div>
     <div class="host-header__meta">
         <span class="pill badge--warn hidden" id="safe-mode-pill">
             <svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg>
@@ -20,5 +28,15 @@
             <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
             <span class="pill__num" id="player-count">{{ players|length }}</span>
         </span>
+        <button class="pill pill--button" id="mode-btn" type="button">
+            <span class="mode-main">
+                <svg class="icon" aria-hidden="true"><use href="#i-flag"></use></svg>
+                Wrap-up quiz
+            </span>
+            <span class="mode-wrap">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                Main game
+            </span>
+        </button>
     </div>
 </header>

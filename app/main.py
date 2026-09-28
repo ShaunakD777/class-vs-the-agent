@@ -40,6 +40,17 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
+def asset_version() -> str:
+    """Newest modified time across static/, added to every CSS and JS link
+    (?v=...) so browsers fetch fresh copies whenever a file changes instead
+    of showing a stale cached one."""
+    files = (BASE_DIR / "static").rglob("*")
+    return str(int(max(f.stat().st_mtime for f in files if f.is_file())))
+
+
+templates.env.globals["asset_version"] = asset_version
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
@@ -71,6 +82,7 @@ def host_page(request: Request, pin: str = ""):
             "SELECT id, nickname FROM player WHERE game_id = ? AND removed = 0 ORDER BY joined_at",
             (DEMO_GAME_ID,),
         ).fetchall()
+        mode = conn.execute("SELECT mode FROM game WHERE id = ?", (DEMO_GAME_ID,)).fetchone()["mode"]
     finally:
         conn.close()
     join_url = str(request.base_url) + "play"
@@ -78,6 +90,7 @@ def host_page(request: Request, pin: str = ""):
         "host.html",
         {
             "request": request,
+            "mode": mode,
             "players": [{"id": p["id"], "nickname": p["nickname"]} for p in players],
             "pin": pin,
             "join_url": join_url,
@@ -130,6 +143,8 @@ async def ws_host(websocket: WebSocket):
                 elif action == "approval_decision":
                     decision = data.get("decision")
                     await game.handle_approval_decision(DEMO_GAME_ID, decision)
+                elif action == "switch_mode":
+                    await game.handle_switch_mode(DEMO_GAME_ID)
                 elif action == "safe_mode":
                     await game.handle_safe_mode(DEMO_GAME_ID)
                 elif action == "pause":
@@ -188,6 +203,7 @@ async def handle_join(websocket: WebSocket, nickname: str, device_token: str | N
                     "device_token": device_token,
                     "reconnected": True,
                     "score": existing["score"],
+                    "mode": game.get_mode(DEMO_GAME_ID),
                 },
             )
             return existing["id"]
@@ -238,7 +254,7 @@ async def handle_join(websocket: WebSocket, nickname: str, device_token: str | N
 
     await manager.send_to_socket(
         websocket,
-        {"type": "joined", "nickname": nickname, "device_token": device_token},
+        {"type": "joined", "nickname": nickname, "device_token": device_token, "mode": game.get_mode(DEMO_GAME_ID)},
     )
     await manager.broadcast_to_host(
         {

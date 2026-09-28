@@ -1,6 +1,9 @@
 """The four agent moments from spec.md: research (questions 1-3), commentary
 after each question, the difficulty check (questions 4-5), and wrap-up
 (revision notes and the winners announcement draft).
+
+Plus the one agent moment in the wrap-up quiz: choosing the difficulty
+(after question 7, and again whenever the class's accuracy drops).
 """
 
 import asyncio
@@ -540,3 +543,84 @@ async def write_wrap_up(game_id: str, players: list) -> tuple[list[str], str]:
 
     await log_event(game_id, "wrap_up", "output", None, "Revision notes and a draft announcement are ready.")
     return notes, announcement
+
+
+# Wrap-up quiz: choosing the difficulty. The only agent moment in the
+# wrap-up quiz. The agent picks a level and says why; it never writes
+# questions, because those all come from wrap_up_quiz.json. Groq only,
+# like the difficulty check above: if it fails, a plain rule picks instead.
+
+LEVELS = ("easy", "medium", "hard")
+# What the lecture calls each level, used in anything the room reads.
+LEVEL_NAMES = {"easy": "Easy", "medium": "Moderate", "hard": "Difficult"}
+
+WRAP_UP_DIFFICULTY_PROMPT = """You are the Game Master running an end-of-lecture quiz on
+agentic AI for university students. Below is how the class did on every question so far,
+and how many unused questions are left at each difficulty.
+
+Decide the difficulty of the next questions: easy, medium or hard. Aim for a level that
+stretches the class without losing them: roughly half to three quarters of answers right.
+Weigh the most recent questions most, especially the ones at the current difficulty,
+and respond to the reason you were asked to decide now.
+Only pick a level that still has questions left.
+
+Give one short reason a presenter can read aloud, based only on the numbers below
+(for example: "Three in four got the Moderate ones right, time for Difficult.").
+In the reason, call the levels Easy, Moderate and Difficult.
+
+Respond with exactly this JSON shape: {"difficulty": "easy" | "medium" | "hard", "reason": "..."}
+"""
+
+
+def _rule_based_difficulty(accuracy_pct: int) -> str:
+    if accuracy_pct >= 75:
+        return "hard"
+    if accuracy_pct < 40:
+        return "easy"
+    return "medium"
+
+
+async def choose_wrap_up_difficulty(
+    game_id: str,
+    trigger: str,
+    results: list[dict],
+    accuracy_pct: int,
+    current_level: str,
+    questions_left: dict[str, int],
+) -> tuple[str, str]:
+    """Perceive (the results so far) -> reason (one Groq call) -> act (return
+    a level for the server to draw questions at). `trigger` is the line
+    explaining why the agent woke up, shown first in the thoughts panel."""
+    await log_event(game_id, "difficulty", "thought", None, trigger)
+
+    results_text = "\n".join(
+        f"Q{r['slot']} ({r['difficulty']}): {r['correct']}/{r['answered']} right" for r in results
+    )
+    left_text = ", ".join(f"{level}: {questions_left.get(level, 0)}" for level in LEVELS)
+    prompt = (
+        WRAP_UP_DIFFICULTY_PROMPT
+        + f"\n\nWhy you're deciding now: {trigger}"
+        + f"\n\nCurrent difficulty: {current_level}\n\nResults so far:\n{results_text}"
+        + f"\n\nQuestions left: {left_text}"
+    )
+
+    try:
+        data = await asyncio.wait_for(asyncio.to_thread(groq_generate_json, prompt), timeout=10)
+        difficulty = str(data["difficulty"]).lower()
+        reason = str(data["reason"]).strip()
+        if difficulty not in LEVELS or not reason:
+            raise ValueError(f"Malformed difficulty decision from the model: {data}")
+    except Exception as exc:
+        difficulty = _rule_based_difficulty(accuracy_pct)
+        reason = f"{accuracy_pct}% right, so the next questions are {LEVEL_NAMES[difficulty]}."
+        await log_event(
+            game_id,
+            "difficulty",
+            "thought",
+            None,
+            "That didn't come back in time, picking the level from the accuracy instead.",
+            detail=str(exc),
+        )
+
+    await log_event(game_id, "difficulty", "output", None, f"{LEVEL_NAMES[difficulty]}: {reason}")
+    return difficulty, reason

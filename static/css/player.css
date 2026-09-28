@@ -74,6 +74,12 @@ body.player {
     white-space: nowrap;
 }
 .tag--accent { border-color: rgba(255, 122, 69, 0.45); color: var(--orange); background: var(--orange-wash); }
+
+/* Wrap-up quiz: a small tag and a blue brand accent, so phones match the
+   big screen. body[data-mode] is set from the server's messages. */
+.tag--wrap { border-color: rgba(76, 125, 255, 0.45); color: var(--blue); background: var(--blue-wash); }
+body.player:not([data-mode="wrap_up"]) .tag--wrap { display: none; }
+body.player[data-mode="wrap_up"] .player-header__brand b { color: var(--blue); }
 .tag > span {
     min-width: 0;
     overflow: hidden;

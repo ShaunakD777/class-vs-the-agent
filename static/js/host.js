@@ -27,8 +27,19 @@
     var nicknames = {};           /* every nickname we've seen, for commentary */
     var playerCount = Number(UI.el("player-count").textContent) || 0;
 
+    /* "main" or "wrap_up". The page is rendered with the current one, and
+       mode_changed switches it; host.css reads data-mode for the look. */
+    function currentMode() {
+        return frame.getAttribute("data-mode");
+    }
+
+    /* Modes can only be switched between games (the server enforces the
+       same rule), so the header button is off everywhere else. */
+    var SWITCHABLE_STATES = ["lobby", "ready", "final"];
+
     function showState(stage) {
         frame.setAttribute("data-stage", stage);
+        UI.el("mode-btn").disabled = SWITCHABLE_STATES.indexOf(stage) === -1;
         var sections = document.querySelectorAll(".state");
         for (var i = 0; i < sections.length; i++) {
             sections[i].classList.toggle(
@@ -314,13 +325,24 @@
         var fraction = DIAL_FRACTION[level] === undefined ? 0.5 : DIAL_FRACTION[level];
         var angle = DIAL_ANGLE[level] === undefined ? 0 : DIAL_ANGLE[level];
 
-        UI.el("difficulty-headline").textContent = headlineFor(level);
+        var wrapUp = currentMode() === "wrap_up";
+
+        UI.el("difficulty-headline").textContent = wrapUp
+            ? wrapUpHeadlineFor(data.previous || "medium", level)
+            : headlineFor(level);
         UI.el("difficulty-reason").textContent = data.reason || "";
 
-        var accuracy = accuracyOverFirst(3);
-        UI.el("difficulty-accuracy").textContent = accuracy === null ? "—" : accuracy + "%";
+        /* The wrap-up quiz can check more than once, so the server sends the
+           number to show and what it measures; the main game's one check is
+           always over the first three questions. */
+        var accuracy = wrapUp ? data.accuracy : accuracyOverFirst(3);
+        UI.el("difficulty-accuracy").textContent =
+            accuracy === null || accuracy === undefined ? "—" : accuracy + "%";
+        UI.el("difficulty-evidence").textContent = wrapUp
+            ? data.evidence || ""
+            : "of the class got the first three questions right.";
 
-        UI.el("dial-level").textContent = level;
+        UI.el("dial-level").textContent = wrapUp ? WRAP_UP_LEVEL_NAMES[level] || level : level;
         UI.el("dial-needle").style.transform = "rotate(" + angle + "deg)";
 
         var scale = document.querySelectorAll(".dial__scale span");
@@ -334,6 +356,16 @@
         requestAnimationFrame(function () {
             fill.style.strokeDashoffset = DIAL_LENGTH * (1 - fraction);
         });
+    }
+
+    var WRAP_UP_LEVEL_NAMES = { easy: "Easy", medium: "Moderate", hard: "Difficult" };
+    var LEVEL_ORDER = ["easy", "medium", "hard"];
+
+    function wrapUpHeadlineFor(previous, level) {
+        var change = LEVEL_ORDER.indexOf(level) - LEVEL_ORDER.indexOf(previous);
+        if (change > 0) return "Raising the difficulty.";
+        if (change < 0) return "Easing off.";
+        return "Holding the difficulty steady.";
     }
 
     function headlineFor(level) {
@@ -461,6 +493,27 @@
     resumeBtn.addEventListener("click", function () { send("resume"); });
     skipQuestionBtn.addEventListener("click", function () { send("skip"); });
     safeModeBtn.addEventListener("click", function () { send("safe_mode"); });
+    UI.el("mode-btn").addEventListener("click", function () { send("switch_mode"); });
+
+    /* A mode switch starts a fresh game from the lobby, so clear everything
+       the last game left on screen. Joined players stay in the list. */
+    function resetForMode(mode) {
+        frame.setAttribute("data-mode", mode);
+        rounds = [];
+        previousRanks = {};
+        research = { searches: 0, sources: 0, drafted: 0 };
+        UI.clear(feed);
+        feed.appendChild(idle); /* the idle line lives inside the feed */
+        UI.show(idle, true);
+        topicInput.value = "";
+        UI.show(UI.el("topic-pill"), false);
+        UI.show(UI.el("question-pill"), false);
+        UI.show(UI.el("safe-mode-pill"), false);
+        showState("lobby");
+        questionControls(false);
+        UI.show(nextBtn, false);
+        UI.show(startBtn, true);
+    }
 
     approveBtn.addEventListener("click", function () {
         send("approval_decision", { decision: "approve" });
@@ -519,6 +572,9 @@
                     UI.show(UI.el("safe-mode-pill"), !!data.safe_mode);
                 }
             }
+
+        } else if (data.type === "mode_changed") {
+            resetForMode(data.mode);
 
         } else if (data.type === "agent_event") {
             pushEvent(data);

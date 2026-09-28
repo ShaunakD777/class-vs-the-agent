@@ -13,10 +13,10 @@
     <title>Class vs. The Agent</title>
     {% include "partials/favicon.html" %}
     {% include "partials/fonts.html" %}
-    <link rel="stylesheet" href="/static/css/tokens.css" />
-    <link rel="stylesheet" href="/static/css/base.css" />
-    <link rel="stylesheet" href="/static/css/components.css" />
-    <link rel="stylesheet" href="/static/css/player.css" />
+    <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/base.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_version() }}" />
+    <link rel="stylesheet" href="/static/css/player.css?v={{ asset_version() }}" />
 </head>
 <body class="player">
     {% include "partials/icons.html" %}
@@ -26,6 +26,7 @@
         <header class="player-header">
             <span class="player-header__brand">Class vs. <b>The Agent</b></span>
             <span class="player-header__right">
+                <span class="tag tag--wrap">Wrap-up</span>
                 <span class="tag hidden" id="slot-tag">
                     Q<span id="slot-num">1</span>/<span id="slot-total">5</span>
                 </span>
@@ -148,7 +149,7 @@
         Connection lost &mdash; refresh this page.
     </p>
 
-    <script src="/static/js/ui.js"></script>
-    <script src="/static/js/player.js"></script>
+    <script src="/static/js/ui.js?v={{ asset_version() }}"></script>
+    <script src="/static/js/player.js?v={{ asset_version() }}"></script>
 </body>
 </html>

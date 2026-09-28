@@ -310,12 +310,13 @@ flowchart LR
 | id | text | Short code, also used in the join link |
 | topic | text | Typed by the presenter |
 | stage | text | lobby, researching, ready, question, reveal, leaderboard, difficulty\_check, final, approval, notes |
-| current\_question | integer | 1 to 5 |
+| current\_question | integer | 1 to 5 (1 to 15 in the wrap-up quiz) |
 | difficulty | text | easy, medium or hard, set at the difficulty check |
 | difficulty\_reason | text | The agent's one-line reason, shown on the banner |
 | safe\_mode | true/false | True if the ready-made quiz is in use |
 | created\_at | time |  |
 | research\_notes | text | What the agent found during research, reused to write questions 4 and 5 |
+| mode | text | main or wrap\_up (see Wrap-up quiz mode). Added in v2 |
 
 ### player
 
@@ -405,7 +406,29 @@ Each player's notes are worked out on request: the notes for the questions they 
 | approval\_request | Server to host | Draft message |
 | approval\_decision | Host to server | Approve or skip |
 | final | Server to each phone | Final rank, score, revision notes |
-| host\_control | Host to server | Start, next, pause, skip, safe mode, remove player |
+| host\_control | Host to server | Start, next, pause, skip, safe mode, remove player, switch mode |
+| mode\_changed | Server to everyone | The new mode (main or wrap\_up); the game resets to the lobby |
+
+## Wrap-up quiz mode (v2)
+
+A second mode for the end of the lecture: a 15-question quiz on the session itself. It deliberately breaks two rules of the main game, so they're written down here: it has **15 questions instead of 5**, and the agent **chooses the difficulty instead of writing questions**. Every question comes from a fixed bank, `wrap_up_quiz.json` (11 Easy, 12 Moderate, 8 Difficult, stored as easy, medium and hard).
+
+**Switching.** A "Wrap-up quiz" button in the host header, next to the class count, toggles between the main game and this mode. It only works between games (lobby, ready or final screen). Joined players stay in; questions, answers, scores and the topic are cleared, and the game goes back to the lobby.
+
+**How it runs.**
+
+| Questions | Source | Agent? |
+| --- | --- | --- |
+| 1–3 | 3 random Easy questions | No |
+| 4–7 | 4 random Moderate questions | No |
+| After 7 | The agent reads the class's accuracy on 1–7 and picks Easy, Moderate or Difficult, with a one-line reason shown on the difficulty dial | Yes |
+| 8–15 | Server code draws a random unused question at the chosen level (nearest level if that one has run out, logged in the thoughts panel) | No |
+| After each of 8–14 | Plain code checks whether that question's % correct is 15 or more points below the class average before it. If so, the agent rethinks the level and the dial shows again | Only on a drop |
+| End | Final screen and phones. Revision notes are each question's answer and explanation from the bank. No commentary, no approval step, no announcement | No |
+
+**Agent calls.** Only the difficulty choice uses the LLM: Groq only, 10 s time limit. If it fails, a plain rule decides (75% or more right: Difficult; under 40%: Easy; otherwise Moderate). No commentary after each question, no research, no wrap-up call.
+
+**Look.** Same screens as the main game. The orange accent turns blue, the header shows a "Wrap-up quiz" badge, the question counter reads out of 15, the topic box and Safe mode are hidden, and phones show a small "Wrap-up" tag.
 
 ## Implementation plan
 

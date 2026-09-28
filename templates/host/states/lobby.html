@@ -14,7 +14,7 @@
     </div>
 
     <div class="lobby__body">
-        <p class="flow">
+        <p class="flow mode-main">
             <b>Join</b>
             <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
             Gather
@@ -23,8 +23,22 @@
             <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
             Start
         </p>
+        <p class="flow mode-wrap">
+            <b>Join</b>
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Play
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Agent observes
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+            Agent adapts
+        </p>
 
-        <h1 class="state__title">Scan in. The agent is warming up.</h1>
+        <h1 class="state__title mode-main">Scan in. The agent is warming up.</h1>
+        <h1 class="state__title mode-wrap">Wrap-up quiz. 15 questions on today.</h1>
+        <p class="state__lead mode-wrap">
+            Easy first, then Moderate. After question 7 the agent reads how you did
+            and picks the difficulty &mdash; and rethinks it if you start slipping.
+        </p>
 
         <div class="count-row">
             <span class="count-row__num" id="lobby-count">{{ players|length }}</span>
@@ -43,7 +57,7 @@
             {% endfor %}
         </ul>
 
-        <div class="topic-control">
+        <div class="topic-control mode-main">
             <div class="field">
                 <label class="field__label" for="topic-input">Topic</label>
                 <input class="input" id="topic-input" type="text" autocomplete="off"

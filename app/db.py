@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS game (
     difficulty_reason TEXT,
     safe_mode INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    research_notes TEXT
+    research_notes TEXT,
+    mode TEXT NOT NULL DEFAULT 'main'
 );
 
 CREATE TABLE IF NOT EXISTS player (
@@ -97,6 +98,12 @@ def init_db() -> None:
     conn = get_connection()
     try:
         conn.executescript(SCHEMA)
+        # `mode` ('main' or 'wrap_up') was added after the first version of
+        # this table, so a game.db created before then needs it added here;
+        # CREATE TABLE IF NOT EXISTS leaves an existing table untouched.
+        columns = [row["name"] for row in conn.execute("PRAGMA table_info(game)")]
+        if "mode" not in columns:
+            conn.execute("ALTER TABLE game ADD COLUMN mode TEXT NOT NULL DEFAULT 'main'")
         conn.commit()
     finally:
         conn.close()

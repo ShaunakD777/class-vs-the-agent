@@ -52,6 +52,64 @@ body.host {
     min-width: 0;
 }
 
+/* ---------- mode: main game vs. wrap-up quiz -------------------------- */
+/* The two modes share every screen. Only a few bits of copy differ
+   (.mode-main / .mode-wrap), and the wrap-up quiz swaps the orange accent
+   for blue so the room can tell at a glance which one is on. */
+.host-frame:not([data-mode="wrap_up"]) .mode-wrap,
+.host-frame[data-mode="wrap_up"] .mode-main { display: none !important; }
+
+.pill--button {
+    font-family: inherit;
+    cursor: pointer;
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.pill--button:hover:not(:disabled),
+.pill--button:focus-visible {
+    color: var(--text);
+    border-color: var(--blue);
+    background: var(--blue-wash);
+}
+.pill--button:disabled { opacity: 0.4; cursor: default; }
+.pill--button > span { display: inline-flex; align-items: center; gap: 0.5em; }
+
+.wordmark__mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-left: var(--s3);
+    padding: 0.3em 0.7em;
+    vertical-align: middle;
+    font-family: var(--font-mono);
+    font-size: 0.55em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--blue);
+    background: var(--blue-wash);
+    border: 1px solid rgba(76, 125, 255, 0.45);
+    border-radius: var(--r-pill);
+}
+
+.host-frame[data-mode="wrap_up"] {
+    background:
+        radial-gradient(90% 70% at 8% -10%, var(--blue-glow), transparent 60%),
+        radial-gradient(80% 70% at 100% 100%, var(--blue-glow), transparent 62%),
+        var(--navy);
+}
+.host-frame[data-mode="wrap_up"] .host-header { border-bottom-color: rgba(76, 125, 255, 0.45); }
+.host-frame[data-mode="wrap_up"] .wordmark b,
+.host-frame[data-mode="wrap_up"] .flow b,
+.host-frame[data-mode="wrap_up"] .count-row__num,
+.host-frame[data-mode="wrap_up"] .dif__headline,
+.host-frame[data-mode="wrap_up"] .dial__level { color: var(--blue); }
+.host-frame[data-mode="wrap_up"] .dial__fill { stroke: var(--blue); }
+.host-frame[data-mode="wrap_up"] .pill--accent {
+    border-color: rgba(76, 125, 255, 0.45);
+    background: var(--blue-wash);
+    color: var(--blue);
+}
+
 /* ---------- stage: 70-75% game content / 25-30% agent activity -------- */
 .host-stage {
     flex: 1;
