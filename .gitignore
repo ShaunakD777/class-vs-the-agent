@@ -1,5 +1,30 @@
+# Secrets: API keys and the presenter PIN
 .env
-game.db
+.env.*
+!.env.example
+
+# Game database and SQLite side files (hold student nicknames and answers)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Python
 __pycache__/
 *.pyc
 .venv/
+venv/
+.pytest_cache/
+
+# Logs
+*.log
+
+# Editors, OS files and local tool settings
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+.claude/settings.local.json

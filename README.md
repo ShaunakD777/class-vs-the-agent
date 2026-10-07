@@ -1,8 +1,8 @@
-# Class vs. The Agent — Project Overview
+# Class vs. The Agent
 
 A snapshot of what this project is, how it works, and how far it has been built.
-For the full requirements see [spec.md](spec.md); for the visual design see
-[design.md](design.md).
+For the full requirements see [docs/spec.md](docs/spec.md); for the visual design see
+[docs/design.md](docs/design.md).
 
 ## What it is
 
@@ -85,8 +85,8 @@ The spec splits the work into 8 phases. Status as of this snapshot:
 | 4. Live agent moments | Done | Commentary after every question, difficulty check with a full-screen banner, questions 4 and 5 written live |
 | 5. Wrap-up | Done | Revision notes, approval screen, announcement shown only after Approve; each phone gets its rank plus notes for the questions it missed |
 | 6. Hardening | Done | Safe-mode button, reconnect by device token, time limits on every AI and search call, nickname length and blocklist check, presenter controls (pause/resume, skip, safe mode, remove player) |
-| 7. Deploy and load test | Partly done | `Procfile` and `runtime.txt` are ready for hosting, and [load_test.py](load_test.py) simulates 50 players. The hosting provider and the real-phone / college Wi-Fi tests are still to do |
-| 8. Polish and rehearse | Partly done | Host and phone screens are styled to [design.md](design.md), with confetti on the final screen. Reveal mode, sounds, rehearsals and a backup recording are not done yet |
+| 7. Deploy and load test | Partly done | `Procfile` and `runtime.txt` are ready for hosting, and [scripts/load_test.py](scripts/load_test.py) simulates 50 players. The hosting provider and the real-phone / college Wi-Fi tests are still to do |
+| 8. Polish and rehearse | Partly done | Host and phone screens are styled to [docs/design.md](docs/design.md), with confetti on the final screen. Reveal mode, sounds, rehearsals and a backup recording are not done yet |
 
 ## Project layout
 
@@ -100,11 +100,11 @@ The spec splits the work into 8 phases. Status as of this snapshot:
 | [app/db.py](app/db.py) | SQLite schema (`game`, `player`, `question`, `answer`, `revision_note`, `agent_event`, `approval`) |
 | [app/connections.py](app/connections.py) | Keeps track of the host and player WebSocket connections |
 | [app/nickname_filter.py](app/nickname_filter.py) | Nickname blocklist |
-| [app/quiz_data.py](app/quiz_data.py), [safe_mode_quiz.json](safe_mode_quiz.json) | The 5-question emergency quiz that needs no internet or AI |
+| [app/quiz_data.py](app/quiz_data.py), [data/](data/) | The 5-question emergency quiz that needs no internet or AI (`safe_mode_quiz.json`) and the end-of-lecture question bank (`wrap_up_quiz.json`) |
 | [templates/](templates/) | Host screen (one partial per stage) and player page |
 | [static/](static/) | CSS design tokens and components, plus `host.js`, `player.js`, `ui.js` |
-| [load_test.py](load_test.py) | Simulates many players joining and answering a full game |
-| [mockups/](mockups/) | Static HTML mockups of the host and lobby screens |
+| [scripts/load_test.py](scripts/load_test.py) | Simulates many players joining and answering a full game |
+| [docs/mockups/](docs/mockups/) | Static HTML mockups of the host and lobby screens |
 
 ## Running it locally
 
@@ -121,7 +121,17 @@ locally but must be set before deploying.
 
 ## Privacy
 
-Only nicknames and answers are collected. There are no accounts or logins.
+Only nicknames and answers are collected. There are no accounts, logins, emails
+or phone numbers. Students are asked to pick a nickname, not their real name.
+
+- Nicknames, answers and scores live only in the server's local SQLite file
+  (`game.db`, gitignored). No student data survives the session: the database
+  is cleared after the lecture.
+- Some nicknames, with their scores and round results, are sent to Groq to
+  write the commentary and the winners announcement. Only the quiz topic is
+  sent to Tavily (web search) and Gemini (research backup).
+- Each phone stores a random device token in its browser so a refresh rejoins
+  the same player. It identifies nothing outside this game.
 
 ## Still to do
 
@@ -133,7 +143,6 @@ Only nicknames and answers are collected. There are no accounts or logins.
 - Wipe game data after the session. Right now `game.db` keeps nicknames and answers
   until it is deleted by hand, which the spec's "deleted after the session" rule
   still needs.
-- Write a README, including the privacy statement.
 - Remove the temporary `DEBUG` traceback prints in `research_topic`.
 - Tune the research prompt on 10+ topics, then do 2 full rehearsals and record a
   backup video.

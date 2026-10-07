@@ -2,16 +2,16 @@
 
 This is a live quiz-show demo for a 2-hour "Agentic AI" guest lecture to 2nd-year
 CSE students. About 50 students play on their phones against an AI game-show host.
-Full spec: `spec.md` in this folder (PRD, TRD, app flow, UI/UX, schema, implementation
+Full spec: `docs/spec.md` (PRD, TRD, app flow, UI/UX, schema, implementation
 plan). Read it before writing any code, and re-check it whenever a decision is unclear.
 
 ## How to work with me
 
-- **One phase at a time.** `spec.md` has 8 phases. Before starting a phase, write a
+- **One phase at a time.** `docs/spec.md` has 8 phases. Before starting a phase, write a
   short plan (files you'll touch, what "done" looks like) and wait for my go-ahead.
   Don't start the next phase until I've run and confirmed the current one.
 - **Stop and ask before:** adding a new library or paid service, changing the schema
-  in `spec.md`, or changing anything in the PRD's feature list.
+  in `docs/spec.md`, or changing anything in the PRD's feature list.
 - **No filler code.** If something in the spec is ambiguous, ask me rather than
   guessing and moving on.
 - **Explain what you built in plain language** after each phase, not just a list of
@@ -43,7 +43,7 @@ plan). Read it before writing any code, and re-check it whenever a decision is u
 
 ## Definition of done, each phase
 
-Copy the "Done when" line from the Phases table in `spec.md` and treat it literally —
+Copy the "Done when" line from the Phases table in `docs/spec.md` and treat it literally —
 if I can't do that exact thing, the phase isn't done yet, even if the code looks complete.
 
 ## Questions still open (ask me, don't assume)

@@ -10,8 +10,8 @@ edited or swapped without touching Python:
 import json
 from pathlib import Path
 
-SAFE_MODE_QUIZ_PATH = Path(__file__).resolve().parent.parent / "safe_mode_quiz.json"
-WRAP_UP_QUIZ_PATH = Path(__file__).resolve().parent.parent / "wrap_up_quiz.json"
+SAFE_MODE_QUIZ_PATH = Path(__file__).resolve().parent.parent / "data" / "safe_mode_quiz.json"
+WRAP_UP_QUIZ_PATH = Path(__file__).resolve().parent.parent / "data" / "wrap_up_quiz.json"
 
 
 def load_safe_mode_quiz() -> list[dict]:

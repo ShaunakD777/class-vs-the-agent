@@ -3,9 +3,9 @@ spec.md's Testing table ("Load: Script opens 50 player connections and
 answers randomly. Pass mark: All answers counted, reveal within 1 s").
 
 Usage:
-    python load_test.py                          # 50 players against localhost:8000
-    python load_test.py --players 15
-    python load_test.py --url wss://your-app.up.railway.app --pin 1234
+    python scripts/load_test.py                  # 50 players against localhost:8000
+    python scripts/load_test.py --players 15
+    python scripts/load_test.py --url wss://your-app.up.railway.app --pin 1234
 """
 
 import argparse
